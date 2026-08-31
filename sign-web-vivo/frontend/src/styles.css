@@ -1,0 +1,247 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #f4f6fa;
+  color: #1f2430;
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+}
+
+.app {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+.header h1 { margin: 0 0 4px; font-size: 26px; }
+.header p { margin: 0 0 18px; color: #6b7280; font-size: 14px; }
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 10px rgba(20, 30, 60, 0.06);
+}
+
+.input {
+  width: 100%;
+  border: 1px solid #dfe3ea;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 16px;
+  font-family: inherit;
+  resize: vertical;
+}
+.input:focus { outline: none; border-color: #4c6ef5; }
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+button {
+  border: 1px solid #dfe3ea;
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: #4c6ef5; color: #4c6ef5; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.primary { background: #4c6ef5; border-color: #4c6ef5; color: #fff; }
+button.primary:hover:not(:disabled) { background: #3b5bdb; color: #fff; }
+
+.switch, .speed, .loop {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.examples { margin-top: 12px; font-size: 13px; color: #6b7280; }
+.chip {
+  padding: 4px 10px;
+  margin: 4px 6px 0 0;
+  font-size: 13px;
+  border-radius: 999px;
+  background: #f1f3f9;
+  border-color: transparent;
+}
+
+.error { margin-top: 12px; color: #e03131; font-size: 14px; }
+.joke {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #fff8e1;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* 播放器 */
+.player.empty { padding: 40px 0; }
+.player-placeholder { text-align: center; color: #9aa1ad; font-size: 14px; }
+
+/* 视频源尺寸 720x830，容器按这个比例，两块视频叠在一起交替显示 */
+.video-wrap {
+  position: relative;
+  height: min(460px, 65vh);
+  aspect-ratio: 72 / 83;
+  margin: 0 auto;
+  background: #0d1117;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+}
+.video.show { opacity: 1; z-index: 1; pointer-events: auto; }
+
+.video-caption {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 2;
+  padding: 10px 14px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
+  color: #fff;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.caption-word { font-size: 22px; font-weight: 600; }
+.caption-pinyin { font-size: 13px; opacity: 0.8; }
+
+.progress { display: flex; flex-wrap: wrap; gap: 4px; margin: 12px 0; }
+.progress-dot {
+  width: 22px; height: 5px;
+  border-radius: 3px;
+  background: #e3e6ee;
+  cursor: pointer;
+}
+.progress-dot.done { background: #a5b4fc; }
+.progress-dot.active { background: #4c6ef5; }
+
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.counter { font-size: 13px; color: #6b7280; }
+select { padding: 4px 6px; border-radius: 6px; border: 1px solid #dfe3ea; font-family: inherit; }
+
+.trim-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #e9ecef;
+}
+.trim { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #4b5563; }
+.trim input[type="range"] { width: 130px; }
+.trim-value { font-variant-numeric: tabular-nums; color: #4c6ef5; font-weight: 600; }
+.trim-hint { font-size: 12px; color: #9aa1ad; }
+
+/* 分词引擎选择 */
+.engine-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #e9ecef;
+  font-size: 13px;
+}
+.engine-label { color: #6b7280; }
+.engine-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid #dfe3ea;
+  border-radius: 999px;
+  color: #4b5563;
+  cursor: pointer;
+}
+.engine-opt.on { border-color: #4c6ef5; background: #edf2ff; color: #364fc7; }
+.engine-opt.off { opacity: 0.55; cursor: not-allowed; }
+.engine-hint { font-size: 12px; color: #9aa1ad; }
+
+/* 分词结果 */
+.result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.coverage { font-weight: 400; color: #6b7280; font-size: 13px; }
+
+.engine-tag {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 400;
+  background: #f1f3f9;
+  color: #6b7280;
+}
+.engine-tag.doubao { background: #e6fcf5; color: #087f5b; }
+.engine-tag.local { background: #edf2ff; color: #364fc7; }
+
+.fallback {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff4e6;
+  color: #d9480f;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.gloss-row {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f8f9fc;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.re-translate { margin-bottom: 12px; }
+
+.tokens { display: flex; flex-wrap: wrap; gap: 8px; }
+.token { padding: 6px 12px; border-radius: 8px; font-size: 15px; }
+.token.matched { background: #edf2ff; border-color: #dbe4ff; color: #364fc7; }
+.token.partial { background: #fff4e6; border-color: #ffe8cc; color: #d9480f; }
+.token.missing { background: #f1f3f5; border-color: #e9ecef; color: #868e96; text-decoration: line-through; }
+.token.active { outline: 2px solid #4c6ef5; }
+
+.missing { margin-top: 12px; font-size: 13px; color: #d9480f; }
+
+.clip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.clip {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.clip.active { border-color: #4c6ef5; background: #edf2ff; }
+.clip-index { font-size: 11px; color: #9aa1ad; }
+.clip-pinyin { font-size: 11px; color: #9aa1ad; }

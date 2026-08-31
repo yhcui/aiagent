@@ -1,0 +1,8 @@
+fastapi>=0.110
+uvicorn[standard]>=0.27
+jieba>=0.42.1
+pydantic>=2.0
+
+# 下面两个只有用「豆包大模型」分词引擎时才需要；不装也能用本地 jieba 引擎
+httpx>=0.27
+python-dotenv>=1.0
