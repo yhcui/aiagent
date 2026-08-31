@@ -41,3 +41,5 @@ Thumbs.db
 logs/
 workspace/
 **/**/.env
+**/.env
+**/**/**/.env
