@@ -1,0 +1,13 @@
+{
+  "name": "role-destiny",
+  "version": "1.0.0",
+  "description": "角色测算小程序",
+  "main": "app.js",
+  "scripts": {
+    "dev": "miniprogram-build",
+    "build": "miniprogram-build --prod"
+  },
+  "keywords": ["miniprogram", "quiz", "personality"],
+  "author": "Role Destiny Team",
+  "license": "MIT"
+}

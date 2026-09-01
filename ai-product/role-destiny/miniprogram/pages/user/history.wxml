@@ -1,0 +1,36 @@
+<!--测试历史记录页-->
+<view class="history-page">
+  <!-- 历史列表 -->
+  <view class="history-list" wx:if="{{!loading && historyList.length > 0}}">
+    <view
+      class="history-item"
+      wx:for="{{historyList}}"
+      wx:key="id"
+      bindtap="goResult"
+      data-id="{{item.id}}"
+    >
+      <view class="item-left">
+        <view class="item-badge" wx:if="{{item.is_paid}}">已解锁</view>
+        <view class="item-badge locked" wx:else>未解锁</view>
+        <text class="item-time">{{item.created_at}}</text>
+      </view>
+      <view class="item-right">
+        <text class="item-score">{{item.match_score}}%</text>
+        <text class="item-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text>加载中...</text>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!loading && empty}}">
+    <image src="/images/empty_history.png" mode="aspectFit"></image>
+    <text class="empty-text">暂无测试记录</text>
+    <text class="empty-hint">开始你的第一次测试吧</text>
+  </view>
+</view>

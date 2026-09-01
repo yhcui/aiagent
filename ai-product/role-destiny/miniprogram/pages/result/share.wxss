@@ -1,0 +1,93 @@
+/* 分享页样式 */
+
+.share-page {
+  min-height: 100vh;
+  background: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 海报预览 */
+.poster-preview {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+}
+
+.poster-image {
+  width: 100%;
+  max-width: 600rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.5);
+}
+
+/* 加载状态 */
+.loading-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid #444;
+  border-top-color: #FF6B6B;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20rpx;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 操作按钮 */
+.action-bar {
+  display: flex;
+  gap: 20rpx;
+  padding: 30rpx;
+  background: #222;
+}
+
+.action-bar button {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 44rpx;
+  font-size: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.btn-save {
+  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+  color: white;
+}
+
+.btn-share {
+  background: #52C41A;
+  color: white;
+}
+
+/* 关闭按钮 */
+.close-btn {
+  position: fixed;
+  top: 60rpx;
+  right: 30rpx;
+  width: 60rpx;
+  height: 60rpx;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  font-size: 40rpx;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,0 +1,54 @@
+<!--测试详情页-->
+<view class="detail-page" wx:if="{{!loading && test}}">
+  <!-- 封面图 -->
+  <view class="cover-section">
+    <image
+      class="cover-image"
+      src="{{test.cover_image || '/images/default_cover.png'}}"
+      mode="aspectFill"
+    ></image>
+    <view class="cover-overlay">
+      <text class="cover-title">{{test.title}}</text>
+    </view>
+  </view>
+
+  <!-- 测试信息 -->
+  <view class="info-section">
+    <view class="info-card">
+      <view class="info-row">
+        <text class="info-label">题目数量</text>
+        <text class="info-value">{{test.question_count}} 题</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">预估时长</text>
+        <text class="info-value">约 {{test.question_count * 0.5}} 分钟</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">测试费用</text>
+        <text class="info-value price" wx:if="{{test.price > 0}}">¥{{test.priceYuan}}</text>
+        <text class="info-value free" wx:else>免费</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 测试描述 -->
+  <view class="desc-section">
+    <view class="section-title">测试说明</view>
+    <view class="desc-content">
+      <text>{{test.description || '暂无说明'}}</text>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar safe-area-bottom">
+    <button class="btn-start" bindtap="startTest">
+      {{test.price > 0 ? '开始测试（¥' + test.priceYuan + '）' : '开始测试'}}
+    </button>
+  </view>
+</view>
+
+<!-- 加载状态 -->
+<view class="loading-page" wx:if="{{loading}}">
+  <view class="loading-spinner"></view>
+  <text>加载中...</text>
+</view>

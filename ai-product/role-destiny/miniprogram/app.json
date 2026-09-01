@@ -1,0 +1,55 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/test/list",
+    "pages/test/detail",
+    "pages/test/question",
+    "pages/result/detail",
+    "pages/result/share",
+    "pages/user/profile",
+    "pages/user/history"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#FF6B6B",
+    "navigationBarTitleText": "角色测算",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F5F5F5",
+    "backgroundTextStyle": "dark",
+    "enablePullDownRefresh": true
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#FF6B6B",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "images/tab_home.png",
+        "selectedIconPath": "images/tab_home_active.png"
+      },
+      {
+        "pagePath": "pages/test/list",
+        "text": "测试",
+        "iconPath": "images/tab_test.png",
+        "selectedIconPath": "images/tab_test_active.png"
+      },
+      {
+        "pagePath": "pages/user/history",
+        "text": "记录",
+        "iconPath": "images/tab_history.png",
+        "selectedIconPath": "images/tab_history_active.png"
+      },
+      {
+        "pagePath": "pages/user/profile",
+        "text": "我的",
+        "iconPath": "images/tab_user.png",
+        "selectedIconPath": "images/tab_user_active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

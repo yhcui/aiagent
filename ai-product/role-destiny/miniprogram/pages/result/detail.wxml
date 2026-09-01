@@ -1,0 +1,115 @@
+<!--结果详情页-->
+<view class="result-page" wx:if="{{!loading && result}}">
+  <!-- 角色卡片 -->
+  <view class="role-card">
+    <view class="role-header">
+      <text class="role-label">你的角色是</text>
+    </view>
+    <view class="role-image">
+      <image
+        src="{{result.role.image || '/images/default_role.png'}}"
+        mode="aspectFit"
+      ></image>
+    </view>
+    <view class="role-name">{{result.role.name}}</view>
+    <view class="role-code">{{result.role.code}}</view>
+    <view class="role-desc">{{result.role.description}}</view>
+
+    <!-- 匹配度 -->
+    <view class="match-score">
+      <view class="score-ring">
+        <view class="score-inner">
+          <text class="score-value">{{result.match_score}}</text>
+          <text class="score-unit">%</text>
+        </view>
+      </view>
+      <text class="score-label">角色匹配度</text>
+    </view>
+  </view>
+
+  <!-- 完整报告（付费内容） -->
+  <view class="report-section" wx:if="{{isPaid && result.full_role}}">
+    <view class="section-title">性格画像</view>
+    <view class="report-card">
+      <text class="report-text">{{result.full_role.personality}}</text>
+    </view>
+
+    <view class="section-title">命运走向</view>
+    <view class="report-card">
+      <text class="report-text">{{result.full_role.destiny}}</text>
+    </view>
+
+    <view class="section-title">优劣势分析</view>
+    <view class="analysis-card">
+      <view class="analysis-item advantage">
+        <view class="analysis-header">
+          <text class="analysis-icon">✓</text>
+          <text class="analysis-title">优势</text>
+        </view>
+        <view class="analysis-list">
+          <text wx:for="{{result.full_role.advantages}}" wx:key="index">{{item}}</text>
+        </view>
+      </view>
+      <view class="analysis-item weakness">
+        <view class="analysis-header">
+          <text class="analysis-icon">!</text>
+          <text class="analysis-title">劣势</text>
+        </view>
+        <view class="analysis-list">
+          <text wx:for="{{result.full_role.weaknesses}}" wx:key="index">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-title">给你的建议</view>
+    <view class="report-card">
+      <text class="report-text">{{result.full_role.suggestion}}</text>
+    </view>
+
+    <view class="section-title">幸运属性</view>
+    <view class="lucky-card">
+      <view class="lucky-item">
+        <text class="lucky-label">幸运数字</text>
+        <text class="lucky-value">{{result.full_role.lucky_number}}</text>
+      </view>
+      <view class="lucky-item">
+        <text class="lucky-label">幸运颜色</text>
+        <text class="lucky-value">{{result.full_role.lucky_color}}</text>
+      </view>
+      <view class="lucky-item">
+        <text class="lucky-label">座右铭</text>
+        <text class="lucky-value motto">{{result.full_role.motto}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 解锁提示（未付费） -->
+  <view class="unlock-section" wx:if="{{!isPaid}}">
+    <view class="unlock-card">
+      <text class="unlock-title">解锁完整报告</text>
+      <text class="unlock-desc">支付后可查看完整性格分析、命运走向、优劣势分析等详细信息</text>
+      <button class="btn-unlock" bindtap="unlockReport" loading="{{paymentLoading}}">
+        解锁完整报告
+      </button>
+    </view>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="bottom-bar safe-area-bottom">
+    <button class="btn-share" bindtap="shareResult">
+      <text class="btn-icon">↗</text>
+      <text>分享结果</text>
+    </button>
+    <button class="btn-poster" bindtap="savePoster">
+      <text class="btn-icon">□</text>
+      <text>生成海报</text>
+    </button>
+    <button class="btn-retest" bindtap="retest">重新测试</button>
+  </view>
+</view>
+
+<!-- 加载状态 -->
+<view class="loading-page" wx:if="{{loading}}">
+  <view class="loading-spinner"></view>
+  <text>加载中...</text>
+</view>

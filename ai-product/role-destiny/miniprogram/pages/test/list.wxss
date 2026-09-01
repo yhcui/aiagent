@@ -1,0 +1,118 @@
+/* 测试列表页样式 */
+
+.list-page {
+  min-height: 100vh;
+  background: #F5F5F5;
+  padding: 20rpx;
+}
+
+.list-container {
+  max-width: 800rpx;
+  margin: 0 auto;
+}
+
+.test-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+
+.test-item {
+  width: calc(50% - 10rpx);
+  background: white;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.test-cover {
+  position: relative;
+  height: 280rpx;
+  overflow: hidden;
+}
+
+.test-cover image {
+  width: 100%;
+  height: 100%;
+}
+
+.test-price-tag {
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+  color: white;
+  font-size: 22rpx;
+  font-weight: 600;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.test-price-tag.free {
+  background: linear-gradient(135deg, #52C41A, #73D13D);
+}
+
+.test-info {
+  padding: 20rpx;
+}
+
+.test-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.test-desc {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.test-stats {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 12rpx;
+}
+
+.stat-item {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+  color: #999;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid #eee;
+  border-top-color: #FF6B6B;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20rpx;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state image {
+  width: 200rpx;
+  height: 200rpx;
+  margin-bottom: 20rpx;
+}

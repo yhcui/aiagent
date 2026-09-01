@@ -1,0 +1,190 @@
+/* 答题页面样式 */
+
+.question-page {
+  min-height: 100vh;
+  background: #F5F5F5;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 进度条 */
+.progress-bar {
+  background: white;
+  padding: 30rpx;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.progress-text {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.progress-percent {
+  font-size: 26rpx;
+  color: #FF6B6B;
+  font-weight: 600;
+}
+
+.progress-track {
+  height: 8rpx;
+  background: #eee;
+  border-radius: 4rpx;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF6B6B, #FF8E8E);
+  border-radius: 4rpx;
+  transition: width 0.3s ease;
+}
+
+/* 题目内容 */
+.question-content {
+  flex: 1;
+  padding: 30rpx;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.question-content.animating {
+  opacity: 0;
+  transform: translateX(30rpx);
+}
+
+.question-card {
+  background: white;
+  border-radius: 20rpx;
+  padding: 40rpx 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+}
+
+.question-text {
+  font-size: 32rpx;
+  color: #333;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+/* 选项列表 */
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  border: 2rpx solid #eee;
+  transition: all 0.3s ease;
+}
+
+.option-item.selected {
+  border-color: #FF6B6B;
+  background: #FFF5F5;
+}
+
+.option-indicator {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.option-item.selected .option-indicator {
+  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+}
+
+.option-letter {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #999;
+}
+
+.option-item.selected .option-letter {
+  color: white;
+}
+
+.option-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.5;
+  margin-left: 20rpx;
+}
+
+.option-check {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.check-icon {
+  width: 36rpx;
+  height: 36rpx;
+  background: #FF6B6B;
+  color: white;
+  border-radius: 50%;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 底部导航 */
+.bottom-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 20rpx 30rpx;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.05);
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 30rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  transition: all 0.3s ease;
+}
+
+.nav-btn.prev {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.nav-btn.next {
+  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+  color: white;
+}
+
+.nav-btn.next.disabled {
+  background: #ccc;
+  pointer-events: none;
+}
+
+.nav-icon {
+  font-size: 36rpx;
+  margin: 0 8rpx;
+}

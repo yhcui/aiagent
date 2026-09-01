@@ -1,0 +1,52 @@
+<!--答题页面-->
+<view class="question-page" wx:if="{{test}}">
+  <!-- 顶部进度 -->
+  <view class="progress-bar">
+    <view class="progress-info">
+      <text class="progress-text">第 {{currentIndex + 1}} / {{test.questions.length}} 题</text>
+      <text class="progress-percent">{{progressPercent}}%</text>
+    </view>
+    <view class="progress-track">
+      <view class="progress-fill" style="width: {{(currentIndex + 1) / test.questions.length * 100}}%"></view>
+    </view>
+  </view>
+
+  <!-- 题目内容 -->
+  <view class="question-content {{animating ? 'animating' : ''}}">
+    <view class="question-card">
+      <text class="question-text">{{test.questions[currentIndex].content}}</text>
+    </view>
+
+    <!-- 选项列表 -->
+    <view class="option-list">
+      <view
+        class="option-item {{answers[currentIndex] === option.id ? 'selected' : ''}}"
+        wx:for="{{test.questions[currentIndex].options}}"
+        wx:key="id"
+        bindtap="selectOption"
+        data-question-index="{{currentIndex}}"
+        data-option-id="{{option.id}}"
+      >
+        <view class="option-indicator">
+          <view class="option-letter">{{['A', 'B', 'C', 'D', 'E', 'F'][index]}}</view>
+        </view>
+        <text class="option-text">{{option.content}}</text>
+        <view class="option-check">
+          <view class="check-icon" wx:if="{{answers[currentIndex] === option.id}}">✓</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部导航 -->
+  <view class="bottom-nav safe-area-bottom">
+    <view class="nav-btn prev" bindtap="prevQuestion" wx:if="{{currentIndex > 0}}">
+      <text class="nav-icon">‹</text>
+      <text>上一题</text>
+    </view>
+    <view class="nav-btn next {{!answers[currentIndex] ? 'disabled' : ''}}" bindtap="nextQuestion">
+      <text>{{currentIndex === test.questions.length - 1 ? '提交测试' : '下一题'}}</text>
+      <text class="nav-icon">›</text>
+    </view>
+  </view>
+</view>

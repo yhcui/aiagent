@@ -1,0 +1,115 @@
+/* 历史记录页样式 */
+
+.history-page {
+  min-height: 100vh;
+  background: #F5F5F5;
+  padding: 20rpx;
+}
+
+/* 历史列表 */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.item-badge {
+  display: inline-block;
+  font-size: 22rpx;
+  color: white;
+  background: linear-gradient(135deg, #52C41A, #73D13D);
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  width: fit-content;
+}
+
+.item-badge.locked {
+  background: linear-gradient(135deg, #999, #bbb);
+}
+
+.item-time {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.item-right {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.item-score {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #FF6B6B;
+}
+
+.item-arrow {
+  font-size: 36rpx;
+  color: #ccc;
+}
+
+/* 加载状态 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+  color: #999;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid #eee;
+  border-top-color: #FF6B6B;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20rpx;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+}
+
+.empty-state image {
+  width: 200rpx;
+  height: 200rpx;
+  margin-bottom: 30rpx;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.empty-hint {
+  font-size: 26rpx;
+  color: #999;
+  margin-top: 16rpx;
+}
