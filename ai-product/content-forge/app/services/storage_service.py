@@ -1,6 +1,7 @@
 """存储服务：SQLite 数据库管理"""
 import json
 import sqlite3
+import threading
 from pathlib import Path
 from loguru import logger
 from app.models.task import Task
@@ -11,13 +12,16 @@ class StorageService:
     def __init__(self, config):
         self.config = config
         self.db_path = config.data_dir / "contentforge.db"
-        self._conn = None
+        self._local = threading.local()
 
     def _get_conn(self):
-        if self._conn is None:
-            self._conn = sqlite3.connect(str(self.db_path))
-            self._conn.row_factory = sqlite3.Row
-        return self._conn
+        """获取当前线程的数据库连接（线程安全）"""
+        conn = getattr(self._local, 'conn', None)
+        if conn is None:
+            conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+            conn.row_factory = sqlite3.Row
+            self._local.conn = conn
+        return conn
 
     def init_db(self):
         conn = self._get_conn()

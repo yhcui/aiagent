@@ -92,7 +92,7 @@ class ResultDialog(QDialog):
             cls = "outline" if style == "outline" else "primary"
             btn.setStyleSheet(f"""
                 QPushButton {{ border: 1px solid #e8eaf0; border-radius: 8px; padding: 8px 16px;
-                               font-size: 13px; color: #646a73; background: white; cursor: pointer; }}
+                               font-size: 13px; color: #646a73; background: white;  }}
                 QPushButton:hover {{ border-color: #3370ff; color: #3370ff; }}
                 QPushButton[cls="primary"] {{ background: #3370ff; color: white; border: none; }}
                 QPushButton[cls="primary"]:hover {{ background: #2b5fe0; }}
@@ -126,6 +126,8 @@ class MainWindow(QWidget):
     task_updated = pyqtSignal(str)  # task_id
     # 信号：显示错误弹框
     show_error = pyqtSignal(str)  # error_msg
+    # 信号：显示AI生成的候选观点
+    show_opinions = pyqtSignal(object)  # opinions list
 
     def __init__(self, config, storage):
         super().__init__()
@@ -133,7 +135,7 @@ class MainWindow(QWidget):
         self.storage = storage
         self.channel_manager = ChannelManager(storage)
         self.task_manager = TaskManager(storage, self.channel_manager, config)
-        self.task_manager.add_listener(self._on_task_updated)
+        self.task_manager.task_updated.connect(self._on_task_updated)  # 使用信号连接
         self.current_channel = "wechat"
         self._opinion_candidates = []  # 当前候选观点
 
@@ -147,6 +149,7 @@ class MainWindow(QWidget):
 
         # 连接信号
         self.show_error.connect(self._on_show_error)
+        self.show_opinions.connect(self._do_show_opinions)
 
     def _set_input_mode(self, mode: str):
         """设置输入模式：url=链接抓取, text=直接粘贴原文"""
@@ -411,7 +414,7 @@ class MainWindow(QWidget):
                 font-size: 12px;
                 color: #646a73;
                 background: white;
-                cursor: pointer;
+                
             }
             QPushButton:hover { border-color: #3370ff; color: #3370ff; }
         """)
@@ -433,7 +436,7 @@ class MainWindow(QWidget):
                     font-size: 12px;
                     color: #34c724;
                     background: #e8f8e5;
-                    cursor: pointer;
+                    
                 }
             """)
         else:
@@ -575,7 +578,7 @@ class MainWindow(QWidget):
                 font-size: 13px;
                 color: #646a73;
                 background: white;
-                cursor: pointer;
+                
             }
             QPushButton:hover { border-color: #3370ff; color: #3370ff; }
         """)
@@ -603,7 +606,7 @@ class MainWindow(QWidget):
         op_head_lbl = QLabel("✨ AI 基于原文生成了候选观点，勾选一个或多个，每个观点将各生成一篇图文")
         op_head_lbl.setStyleSheet("font-size: 13px; font-weight: 600; color: #3b5bd9;")
         self.opinion_close_btn = QPushButton("收起 ✕")
-        self.opinion_close_btn.setStyleSheet("background: transparent; border: none; color: #8f959e; cursor: pointer; font-size: 12px;")
+        self.opinion_close_btn.setStyleSheet("background: transparent; border: none; color: #8f959e;  font-size: 12px;")
         self.opinion_close_btn.clicked.connect(lambda: self.opinion_panel.setVisible(False))
         op_head_lay.addWidget(op_head_lbl)
         op_head_lay.addWidget(self.opinion_close_btn)
@@ -628,7 +631,7 @@ class MainWindow(QWidget):
         self.sel_count_lbl.setStyleSheet("font-size: 12px; color: #8f959e;")
         self.add_selected_btn = QPushButton("＋ 添加所选到任务列表")
         self.add_selected_btn.setStyleSheet("""
-            QPushButton { background: #3370ff; color: white; border-radius: 8px; padding: 8px 18px; font-size: 13px; cursor: pointer; }
+            QPushButton { background: #3370ff; color: white; border-radius: 8px; padding: 8px 18px; font-size: 13px;  }
             QPushButton:hover { background: #2b5fe0; }
         """)
         self.add_selected_btn.clicked.connect(self._on_add_selected_opinions)
@@ -655,7 +658,7 @@ class MainWindow(QWidget):
                 font-size: 13px;
                 color: #646a73;
                 background: white;
-                cursor: pointer;
+                
             }
             QPushButton:hover { border-color: #3370ff; color: #3370ff; }
         """)
@@ -691,7 +694,7 @@ class MainWindow(QWidget):
                 padding: 10px 24px;
                 font-size: 14px;
                 font-weight: 600;
-                cursor: pointer;
+                
             }
             QPushButton:hover { background: #2b5fe0; }
             QPushButton:disabled { background: #c0c7cf; cursor: not-allowed; }
@@ -709,6 +712,7 @@ class MainWindow(QWidget):
         self.task_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.task_table.setColumnWidth(0, 260)
         self.task_table.setColumnWidth(2, 100)
+        self.task_table.setColumnWidth(3, 180)  # 操作列：查看+复制按钮需要足够宽度
         self.task_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.task_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.task_table.setShowGrid(False)
@@ -737,6 +741,9 @@ class MainWindow(QWidget):
             }
         """)
         self.task_table.setMinimumHeight(200)
+        # 关键：设置默认行高，确保 cell widget 有足够空间显示
+        self.task_table.verticalHeader().setDefaultSectionSize(60)
+        self.task_table.verticalHeader().setMinimumSectionSize(60)
         c2_lay.addWidget(self.task_table)
 
         self._update_task_table()
@@ -797,7 +804,7 @@ class MainWindow(QWidget):
                 if not opinions:
                     self._opinion_error("AI 生成观点失败，请检查 API 配置或网络连接")
                     return
-                self._show_opinions(opinions)
+                self.show_opinions.emit(opinions)  # 通过信号传递到主线程
             except ValueError as e:
                 # 业务异常，通过信号显示给用户
                 logger.warning(f"AI 生成观点业务错误：{e}")
@@ -856,13 +863,12 @@ class MainWindow(QWidget):
                 border-radius: 10px;
                 padding: 2px 8px;
                 font-size: 11px;
-                flex-shrink: 0;
             """)
             text_lbl = QLabel(text)
             text_lbl.setWordWrap(True)
             text_lbl.setStyleSheet("font-size: 13px; color: #646a73; line-height: 1.7;")
             check_lbl = QLabel("")
-            check_lbl.setStyleSheet("font-size: 14px; color: #3370ff; font-weight: bold; flex-shrink: 0;")
+            check_lbl.setStyleSheet("font-size: 14px; color: #3370ff; font-weight: bold;")
             check_lbl.setFixedWidth(20)
             item_lay.addWidget(tag_lbl)
             item_lay.addWidget(text_lbl)
@@ -873,12 +879,12 @@ class MainWindow(QWidget):
                     if idx not in self._selected_opinions:
                         self._selected_opinions.append(idx)
                         iw.setStyleSheet("QWidget { background: #eef3ff; border: 1px solid #3370ff; border-radius: 8px; padding: 10px 12px; }")
-                        tag_lbl.setStyleSheet("background: #3370ff; color: white; border-radius: 10px; padding: 2px 8px; font-size: 11px; flex-shrink: 0;")
+                        tag_lbl.setStyleSheet("background: #3370ff; color: white; border-radius: 10px; padding: 2px 8px; font-size: 11px;")
                         cl.setText("✓")
                     else:
                         self._selected_opinions.remove(idx)
                         iw.setStyleSheet("QWidget { background: white; border: 1px solid #e8eaf0; border-radius: 8px; padding: 10px 12px; }")
-                        tag_lbl.setStyleSheet("background: #f2f3f5; color: #8f959e; border-radius: 10px; padding: 2px 8px; font-size: 11px; flex-shrink: 0;")
+                        tag_lbl.setStyleSheet("background: #f2f3f5; color: #8f959e; border-radius: 10px; padding: 2px 8px; font-size: 11px;")
                         cl.setText("")
                     n = len(self._selected_opinions)
                     self.sel_count_lbl.setText(f"已选 {n} 个观点（将生成 {n} 篇图文）")
@@ -892,10 +898,14 @@ class MainWindow(QWidget):
             QMessageBox.information(self, "请先选择", "请先勾选至少一个候选观点")
             return
         url = self.url_input.text().strip() or "(未填写链接)"
+        # 获取原文（如果用户已粘贴）
+        original_content = None
+        if self._mode == "text":
+            original_content = self.original_text_input.toPlainText().strip() or None
         new_tasks = []
         for idx in self._selected_opinions:
             op = self._opinion_candidates[idx]
-            task = self.task_manager.add_task(url, op.get("opinion", ""), "wechat")
+            task = self.task_manager.add_task(url, op.get("opinion", ""), "wechat", original_content)
             new_tasks.append(task)
         self._update_task_table()
         self.opinion_panel.setVisible(False)
@@ -958,6 +968,11 @@ class MainWindow(QWidget):
         self.task_manager.start_generation()
 
     def _on_task_updated(self, task: Task):
+        if task is None:
+            # 队列为空，恢复按钮
+            self.start_gen_btn.setEnabled(True)
+            self.start_gen_btn.setText(f"🚀 开始生成（{len(self.task_manager.tasks)}）")
+            return
         QTimer.singleShot(0, lambda: self._refresh_task_row(task))
 
     def _refresh_task_row(self, task: Task):
@@ -967,12 +982,25 @@ class MainWindow(QWidget):
             pending = [t for t in self.task_manager.tasks if t.status in (TaskStatus.PENDING, TaskStatus.PROCESSING)]
             if not pending:
                 self.start_gen_btn.setEnabled(True)
-                self.start_gen_btn.setText(f"🚀 开始生成（{len(self.task_manager.tasks)}）")
+                # 统计结果
+                completed = sum(1 for t in self.task_manager.tasks if t.status == TaskStatus.COMPLETED)
+                failed = sum(1 for t in self.task_manager.tasks if t.status == TaskStatus.FAILED)
+                total = len(self.task_manager.tasks)
+                if failed == 0:
+                    self.start_gen_btn.setText(f"✅ 全部完成（{completed}/{total}）")
+                    QMessageBox.information(self, "生成完成", f"🎉 所有 {total} 个任务已成功完成！\n\n点击「查看」按钮查看生成的图文内容")
+                else:
+                    self.start_gen_btn.setText(f"⚠️ 部分失败（{completed}/{total}）")
+                    QMessageBox.warning(self, "生成完成", f"完成 {completed} 个，失败 {failed} 个\n\n失败的任务可点击「原因」查看详情或「重试」")
 
     def _update_task_table(self):
         tasks = self.task_manager.tasks
         self.task_table.setRowCount(len(tasks))
         for row, task in enumerate(tasks):
+            # 调试日志：打印任务状态
+            from loguru import logger
+            logger.debug(f"表格行 {row}: id={task.id[:8] if task.id else 'None'}, status={task.status.value}, has_content={bool(task.generated_content and task.generated_content.strip())}")
+            
             # 链接
             url_item = QTableWidgetItem(task.url)
             url_item.setForeground(QColor("#3370ff"))
@@ -1004,33 +1032,34 @@ class MainWindow(QWidget):
             self.task_table.setItem(row, 2, status_item)
             # 操作
             ops_w = QWidget()
-            ops_lay = QHBoxLayout(ops_lay := QHBoxLayout())
+            ops_lay = QHBoxLayout()
             ops_lay.setContentsMargins(0, 0, 0, 0)
             ops_lay.setSpacing(6)
-            if task.status == TaskStatus.COMPLETED:
-                for label, cb in [("查看", lambda t=task: self._show_result(t)),
-                                   ("复制", lambda t=task: self._copy_result(t))]:
-                    btn = QPushButton(label)
-                    btn.setStyleSheet("background: transparent; color: #3370ff; border: none; cursor: pointer; font-size: 13px; padding: 2px 6px;")
-                    btn.clicked.connect(cb)
-                    ops_lay.addWidget(btn)
-            elif task.status == TaskStatus.FAILED:
-                for label, cb in [("原因", lambda t=task: self._show_error(t)),
-                                   ("重试", lambda t=task: self._on_retry(t))]:
-                    btn = QPushButton(label)
-                    btn.setStyleSheet("background: transparent; color: #646a73; border: none; cursor: pointer; font-size: 13px; padding: 2px 6px;")
-                    btn.clicked.connect(cb)
-                    ops_lay.addWidget(btn)
+            
+            # 有内容就显示查看/复制按钮（使用 QLabel 模拟按钮，避免 QSS 冲突）
+            if task.generated_content and task.generated_content.strip():
+                view_btn = self._create_action_label("查看", "#3370ff", lambda: self._show_result(task))
+                ops_lay.addWidget(view_btn)
+                
+                copy_btn = self._create_action_label("复制", "#4e5969", lambda: self._copy_result(task))
+                ops_lay.addWidget(copy_btn)
+                
+            elif task.status == TaskStatus.FAILED and task.error_message:
+                err_btn = self._create_action_label("原因", "#f54a45", lambda: self._show_error(task))
+                ops_lay.addWidget(err_btn)
+                
+                retry_btn = self._create_action_label("重试", "#ff7d00", lambda: self._on_retry(task))
+                ops_lay.addWidget(retry_btn)
+                
             elif task.status == TaskStatus.PROCESSING:
                 lbl = QLabel("处理中…")
-                lbl.setStyleSheet("color: #3370ff; font-size: 12px;")
+                lbl.setStyleSheet("color: #3370ff; font-size: 13px; font-weight: bold;")
                 ops_lay.addWidget(lbl)
             else:
-                rm_btn = QPushButton("移除")
-                rm_btn.setStyleSheet("background: transparent; color: #f54a45; border: none; cursor: pointer; font-size: 13px; padding: 2px 6px;")
-                rm_btn.clicked.connect(lambda _, tid=task.id: self._on_remove_task(tid))
-                ops_lay.addWidget(rm_btn)
+                rm_lbl = self._create_action_label("移除", "#f54a45", lambda tid=task.id: self._on_remove_task(tid))
+                ops_lay.addWidget(rm_lbl)
             ops_lay.addStretch()
+            ops_w.setLayout(ops_lay)  # 关键：必须将布局设置到 widget 上！
             self.task_table.setCellWidget(row, 3, ops_w)
 
         # 更新计数
@@ -1044,6 +1073,33 @@ class MainWindow(QWidget):
         pending_count = len([t for t in tasks if t.status == TaskStatus.PENDING])
         self.start_gen_btn.setText(f"🚀 开始生成（{pending_count}）")
         self.start_gen_btn.setEnabled(pending_count > 0)
+
+    def _create_action_label(self, text: str, color: str, callback):
+        """创建可点击的 QLabel 作为按钮（避免 QPushButton 的 QSS 样式冲突）"""
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtWidgets import QFrame
+        
+        lbl = QLabel(f"  {text}  ")
+        lbl.setFixedHeight(32)  # 强制设置固定高度，避免被表格行高裁剪
+        lbl.setStyleSheet(f"""
+            color: {color};
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid {color};
+            border-radius: 4px;
+            background: white;
+            padding: 0px 10px;
+            line-height: 32px;
+        """)
+        lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)  # 文字居中
+        lbl.setCursor(Qt.CursorShape.PointingHandCursor)
+        
+        def mouse_press(event):
+            if event.button() == Qt.MouseButton.LeftButton:
+                callback()
+        
+        lbl.mousePressEvent = mouse_press
+        return lbl
 
     def _show_result(self, task: Task):
         dlg = ResultDialog(task, self)
@@ -1154,7 +1210,7 @@ class MainWindow(QWidget):
             status_item2.setForeground(QColor("#34c724"))
             self.history_table.setItem(row, 3, status_item2)
             view_btn = QPushButton("查看")
-            view_btn.setStyleSheet("background: transparent; color: #3370ff; border: none; cursor: pointer;")
+            view_btn.setStyleSheet("background: transparent; color: #3370ff; border: none; ")
             view_btn.clicked.connect(lambda _, task=t: self._show_result(task))
             self.history_table.setCellWidget(row, 4, view_btn)
 
@@ -1183,7 +1239,7 @@ class MainWindow(QWidget):
         self.api_tabs.setStyleSheet("""
             QTabWidget::pane { border: none; background: transparent; }
             QTabBar::tab { padding: 8px 22px; border-radius: 8px; color: #646a73; background: transparent; margin-right: 4px; }
-            QTabBar::tab:selected { background: white; color: #3370ff; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+            QTabBar::tab:selected { background: white; color: #3370ff; font-weight: 600; }
             QTabBar::tab:hover:!selected { background: #f2f4f9; }
         """)
         self.api_tabs.addTab(self._build_api_tab("text"), "📝 生文")
@@ -1237,10 +1293,10 @@ class MainWindow(QWidget):
         btn_row_lay.setContentsMargins(0, 0, 0, 0)
         btn_row_lay.addStretch()
         test_btn = QPushButton("🔌 测试连接")
-        test_btn.setStyleSheet("border: 1px solid #e8eaf0; border-radius: 8px; padding: 8px 16px; color: #646a73; cursor: pointer;")
+        test_btn.setStyleSheet("border: 1px solid #e8eaf0; border-radius: 8px; padding: 8px 16px; color: #646a73; ")
         test_btn.clicked.connect(lambda: self._test_connection(ability, base_url_w, api_key_w, model_id_w))
         save_btn = QPushButton("保存配置")
-        save_btn.setStyleSheet("background: #3370ff; color: white; border-radius: 8px; padding: 8px 18px; cursor: pointer;")
+        save_btn.setStyleSheet("background: #3370ff; color: white; border-radius: 8px; padding: 8px 18px; ")
         save_btn.clicked.connect(lambda: self._save_api_config(ability, base_url_w, api_key_w, model_id_w))
         btn_row_lay.addWidget(test_btn)
         btn_row_lay.addWidget(save_btn)
@@ -1388,7 +1444,7 @@ class MainWindow(QWidget):
             table.setItem(row, 2, si)
             table.setItem(row, 3, QTableWidgetItem(ch.system_prompt[:80] + "..." if len(ch.system_prompt) > 80 else ch.system_prompt))
             view_btn = QPushButton("查看/编辑")
-            view_btn.setStyleSheet("background: transparent; color: #3370ff; border: none; cursor: pointer;")
+            view_btn.setStyleSheet("background: transparent; color: #3370ff; border: none; ")
             view_btn.clicked.connect(lambda _, channel=ch: self._edit_channel_prompt(channel))
             table.setCellWidget(row, 4, view_btn)
         table.setMinimumHeight(200)
@@ -1415,10 +1471,10 @@ class MainWindow(QWidget):
         btn_row_lay.setContentsMargins(0, 0, 0, 0)
         btn_row_lay.addStretch()
         cancel_btn = QPushButton("取消")
-        cancel_btn.setStyleSheet("border: 1px solid #e8eaf0; border-radius: 8px; padding: 8px 16px; cursor: pointer;")
+        cancel_btn.setStyleSheet("border: 1px solid #e8eaf0; border-radius: 8px; padding: 8px 16px; ")
         cancel_btn.clicked.connect(dlg.reject)
         save_btn = QPushButton("保存")
-        save_btn.setStyleSheet("background: #3370ff; color: white; border-radius: 8px; padding: 8px 18px; cursor: pointer;")
+        save_btn.setStyleSheet("background: #3370ff; color: white; border-radius: 8px; padding: 8px 18px; ")
         save_btn.clicked.connect(lambda: (
             setattr(channel, 'system_prompt', editor.toPlainText()),
             self.channel_manager.update_channel(channel),
