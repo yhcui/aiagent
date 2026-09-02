@@ -18,3 +18,19 @@ mcp dev 是 FastMCP CLI 提供的开发命令，用于启动 MCP Inspector 界�
     }
   }
 }
+# 配置示例
+{
+"mcpServers": {
+"example-server": {
+"name": "example-server",
+"type": "stdio",
+"command": "uv",
+"args": [
+"--directory",
+"/path/to/your/project",
+"run",
+"main.py"
+]
+}
+}
+}

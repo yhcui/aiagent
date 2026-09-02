@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContentForge 内容锻造师 · 界面演示稿 v0.1</title>
+<style>
+  :root {
+    --bg: #f5f6fa;
+    --sidebar-bg: #ffffff;
+    --sidebar-border: #e8eaf0;
+    --card-bg: #ffffff;
+    --text-primary: #1f2329;
+    --text-secondary: #646a73;
+    --text-muted: #8f959e;
+    --accent: #3370ff;
+    --accent-hover: #2b5fe0;
+    --accent-light: #eef3ff;
+    --success: #34c724;
+    --success-bg: #e8f8e5;
+    --warning: #ff8800;
+    --warning-bg: #fff3e0;
+    --danger: #f54a45;
+    --danger-bg: #feeceb;
+    --processing: #3370ff;
+    --processing-bg: #eef3ff;
+    --pending: #8f959e;
+    --pending-bg: #f2f3f5;
+    --border: #e8eaf0;
+    --radius: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-size: 14px;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+  }
+
+  /* ============ 侧边导航 ============ */
+  .sidebar {
+    width: 232px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .logo {
+    padding: 20px 18px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--sidebar-border);
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #3370ff, #7b5cff);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 18px; font-weight: bold;
+  }
+  .logo-name { font-size: 15px; font-weight: 600; }
+  .logo-sub { font-size: 11px; color: var(--text-muted); }
+
+  .nav { flex: 1; overflow-y: auto; padding: 10px 10px 20px; }
+  .nav-group-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 14px 10px 6px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-group-label .tag-soon {
+    font-size: 10px;
+    background: var(--pending-bg);
+    color: var(--pending);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+    user-select: none;
+    transition: background .15s;
+    position: relative;
+  }
+  .nav-item:hover { background: #f2f4f9; }
+  .nav-item.active {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .nav-item .icon { width: 18px; text-align: center; font-size: 15px; }
+  .nav-item .chevron { margin-left: auto; font-size: 10px; color: var(--text-muted); }
+  .nav-item.disabled {
+    color: #c3c7cf;
+    cursor: not-allowed;
+    background: transparent;
+  }
+  .nav-item.disabled:hover { background: transparent; }
+  .nav-sub { margin-left: 27px; position: relative; }
+  .nav-sub::before {
+    content: "";
+    position: absolute;
+    left: -12px; top: -6px; bottom: 6px;
+    width: 1px;
+    background: var(--border);
+  }
+  .nav-sub .nav-item { padding: 7px 10px; font-size: 13px; }
+  .badge-soon {
+    margin-left: auto;
+    font-size: 10px;
+    background: var(--pending-bg);
+    color: var(--pending);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 400;
+  }
+  .sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--sidebar-border);
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ============ 主区域 ============ */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar {
+    height: 54px;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .topbar .crumb { color: var(--text-muted); font-size: 13px; }
+  .topbar .crumb b { color: var(--text-primary); font-weight: 600; }
+  .topbar .spacer { flex: 1; }
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+  .page { display: none; max-width: 980px; margin: 0 auto; }
+  .page.show { display: block; }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .card-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+
+  /* 表单 */
+  .form-row { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+  .form-label .req { color: var(--danger); margin-left: 2px; }
+  .form-hint { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+  .input, .textarea, .select {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    background: #fff;
+  }
+  .input:focus, .textarea:focus, .select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(51, 112, 255, .12);
+  }
+  .textarea { resize: vertical; min-height: 84px; line-height: 1.6; }
+
+  .btn {
+    border: none;
+    border-radius: 8px;
+    padding: 9px 18px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary.lg { padding: 11px 26px; font-size: 14px; font-weight: 600; }
+  .btn-outline {
+    background: #fff;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-ghost { background: transparent; color: var(--text-secondary); }
+  .btn-ghost:hover { background: #f2f4f9; }
+  .btn-danger-ghost { background: transparent; color: var(--danger); }
+  .btn-danger-ghost:hover { background: var(--danger-bg); }
+
+  /* AI 候选观点区 */
+  .opinion-panel {
+    border: 1px solid #d6e0ff;
+    background: #f8faff;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .opinion-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 600;
+    color: #3b5bd9;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+  .opinion-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all .15s;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    user-select: none;
+  }
+  .opinion-item:hover { border-color: var(--accent); }
+  .opinion-item.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: var(--text-primary);
+  }
+  .opinion-item.selected::after {
+    content: "✓";
+    color: var(--accent);
+    font-weight: bold;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  .opinion-item .tag {
+    flex-shrink: 0;
+    font-size: 11px;
+    background: #f2f3f5;
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+  .opinion-item.selected .tag { background: var(--accent); color: #fff; }
+  .opinion-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+  .opinion-footer .sel-count { font-size: 12px; color: var(--text-muted); }
+  .ai-loading {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 16px 4px;
+    text-align: center;
+    animation: loading-pulse 1.2s infinite;
+  }
+  @keyframes loading-pulse { 50% { opacity: .4; } }
+
+  /* 任务表格 */
+  .table { width: 100%; border-collapse: collapse; }
+  .table th {
+    text-align: left;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .table td {
+    padding: 12px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .table tr:last-child td { border-bottom: none; }
+  .url-cell {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--accent);
+  }
+  .opinion-cell {
+    max-width: 260px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: var(--text-secondary);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+  .chip.pending { background: var(--pending-bg); color: var(--pending); }
+  .chip.pending::before { background: var(--pending); }
+  .chip.processing { background: var(--processing-bg); color: var(--processing); }
+  .chip.processing::before { background: var(--processing); animation: blink 1s infinite; }
+  .chip.completed { background: var(--success-bg); color: var(--success); }
+  .chip.completed::before { background: var(--success); }
+  .chip.failed { background: var(--danger-bg); color: var(--danger); }
+  .chip.failed::before { background: var(--danger); }
+  @keyframes blink { 50% { opacity: .3; } }
+
+  .toolbar-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .count-note { font-size: 12px; color: var(--text-muted); }
+
+  /* API 配置 Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: #f2f3f5;
+    padding: 4px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    width: fit-content;
+  }
+  .tab {
+    padding: 8px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+  }
+  .tab.active { background: #fff; color: var(--accent); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .tab .tag-soon { font-size: 10px; color: var(--pending); }
+
+  .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .config-grid .full { grid-column: span 2; }
+
+  .override-item {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .override-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .override-head .name { font-weight: 600; font-size: 13px; }
+  .override-head .note { font-size: 12px; color: var(--text-muted); }
+  .override-head .right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+  /* 开关 */
+  .switch { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; inset: 0;
+    background: #d5d8de;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: .2s;
+  }
+  .slider::before {
+    content: "";
+    position: absolute;
+    width: 16px; height: 16px;
+    left: 2px; top: 2px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,.2);
+  }
+  .switch input:checked + .slider { background: var(--accent); }
+  .switch input:checked + .slider::before { transform: translateX(16px); }
+  .override-body { margin-top: 12px; display: none; }
+  .override-item.on .override-body { display: block; }
+  .override-item.on { border-color: var(--accent); background: #fbfcff; }
+
+  /* 占位页 */
+  .placeholder {
+    text-align: center;
+    padding: 90px 20px;
+    color: var(--text-muted);
+  }
+  .placeholder .big { font-size: 46px; margin-bottom: 16px; }
+  .placeholder h3 { color: var(--text-secondary); font-size: 16px; margin-bottom: 8px; }
+  .placeholder p { font-size: 13px; }
+
+  .link { color: var(--accent); cursor: pointer; }
+  .link:hover { text-decoration: underline; }
+
+  .demo-banner {
+    background: linear-gradient(90deg, #eef3ff, #f3efff);
+    border: 1px dashed #b8ccff;
+    color: #3b5bd9;
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    font-size: 12px;
+    margin-bottom: 16px;
+    max-width: 980px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* 模态框 */
+  .modal-mask {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(31, 35, 41, .4);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-mask.show { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 14px;
+    width: 640px;
+    max-height: 82vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 12px 40px rgba(0,0,0,.18);
+  }
+  .modal-head {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .modal-body { padding: 20px 22px; overflow-y: auto; }
+  .modal-foot {
+    padding: 14px 22px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  .result-content {
+    background: #f7f8fa;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 13px;
+    line-height: 1.9;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .result-content h2 { font-size: 16px; margin-bottom: 10px; }
+  .result-content p { margin-bottom: 8px; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+
+<!-- ================= 侧边导航 ================= -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">锻</div>
+    <div>
+      <div class="logo-name">内容锻造师</div>
+      <div class="logo-sub">ContentForge v0.1</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <!-- 能力一：生文 -->
+    <div class="nav-group-label">📝 生文</div>
+    <div class="nav-sub">
+      <div class="nav-item active" data-page="wechat"><span class="icon">💬</span>微信公众号</div>
+      <div class="nav-item" data-page="toutiao"><span class="icon">📰</span>头条号<span class="badge-soon">即将上线</span></div>
+    </div>
+
+    <!-- 能力二：生图（预留） -->
+    <div class="nav-group-label">🖼️ 生图<span class="tag-soon">预留</span></div>
+    <div class="nav-item disabled"><span class="icon">🎨</span>配图生成</div>
+
+    <!-- 能力三：生视频（预留） -->
+    <div class="nav-group-label">🎬 生视频<span class="tag-soon">预留</span></div>
+    <div class="nav-item disabled"><span class="icon">🎥</span>视频生成</div>
+
+    <!-- 其他 -->
+    <div class="nav-group-label">🕘 记录</div>
+    <div class="nav-item" data-page="history"><span class="icon">📋</span>历史记录</div>
+
+    <div class="nav-group-label">⚙️ 设置</div>
+    <div class="nav-item" data-page="api"><span class="icon">🔌</span>API 配置</div>
+    <div class="nav-item" data-page="channel"><span class="icon">📡</span>渠道管理</div>
+    <div class="nav-item" data-page="general"><span class="icon">⚙️</span>通用设置</div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <span>本地运行 · 数据不出本机</span>
+  </div>
+</aside>
+
+<!-- ================= 主区域 ================= -->
+<div class="main">
+  <div class="topbar">
+    <span class="crumb" id="crumb">生文 / <b>微信公众号</b></span>
+    <span class="spacer"></span>
+    <button class="btn btn-outline" onclick="alert('演示稿：此处跳转 API 配置')">🔌 API 状态：已配置</button>
+  </div>
+
+  <div class="content">
+
+    <!-- ========== 页面：生文-微信公众号 ========== -->
+    <div class="page show" id="page-wechat">
+      <div class="demo-banner">📌 这是静态演示稿（HTML 原型），用于确认布局与交互。数据均为示例，点击左侧导航可切换页面。</div>
+
+      <div class="card">
+        <div class="card-title">新增任务</div>
+        <div class="card-desc">填入文章链接和你的观点，可连续添加多条，提交后批量生成</div>
+        <div class="form-row">
+          <label class="form-label">文章链接<span class="req">*</span></label>
+          <input class="input" type="text" placeholder="https://mp.weixin.qq.com/s/xxxxxx" value="https://mp.weixin.qq.com/s/abc123demo">
+        </div>
+        <div class="form-row">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <label class="form-label" style="margin-bottom:0;">我的观点 / 看法<span class="req">*</span></label>
+            <button class="btn btn-outline" onclick="genOpinions()">✨ AI 生成观点</button>
+          </div>
+          <textarea class="textarea" placeholder="写下你对这篇文章的看法、补充或反驳，AI 会把它融入生成的图文（建议 100-500 字）">这篇文章讲透了 AI 工具的降本逻辑，但忽略了中小企业落地难的真问题。我想结合我们团队的实际使用经历，聊聊哪些场景真正跑通了。</textarea>
+          <div class="form-hint">建议 100–500 字；没思路可点「✨ AI 生成观点」，由 AI 基于原文生成 3–5 个候选观点，勾选后每个观点各生成一篇图文</div>
+        </div>
+
+        <!-- AI 候选观点区（演示） -->
+        <div class="opinion-panel" id="opinionPanel" style="display:none;">
+          <div class="opinion-panel-head">
+            <span>✨ AI 基于原文生成了 5 个候选观点，勾选一个或多个，每个观点将各生成一篇图文</span>
+            <button class="btn btn-ghost" onclick="hideOpinions()">收起 ✕</button>
+          </div>
+          <div class="ai-loading" id="opinionLoading">⏳ 正在抓取原文并生成观点…（演示稿模拟）</div>
+          <div id="opinionList" style="display:none;">
+            <div class="opinion-item"><span class="tag">落地视角</span><span class="op-text">文章把降本讲得很美好，但没提"养工具"的隐性成本——我们团队光调提示词模板就花了两周，这笔账没人算过。</span></div>
+            <div class="opinion-item"><span class="tag">反驳视角</span><span class="op-text">AI 降的是"生成成本"，不是"判断成本"。初稿确实快了，但核对事实、把关质量的时间反而变长，最后一公里仍然需要人。</span></div>
+            <div class="opinion-item"><span class="tag">延伸视角</span><span class="op-text">中小企业真正该先用的不是写文案，而是客服话术库、周报自动化这类低风险、高频次的场景，先跑通再扩展。</span></div>
+            <div class="opinion-item"><span class="tag">数据视角</span><span class="op-text">结合文章给的案例算一笔账：哪些环节真实省了时间，哪些环节其实更慢了。降本不能只看单一环节，要看全流程。</span></div>
+            <div class="opinion-item"><span class="tag">预测视角</span><span class="op-text">如果降本逻辑成立，等明年工具价格战打完，拼的就不是模型能力，而是谁沉淀了行业模板库和工作流。</span></div>
+          </div>
+          <div class="opinion-footer" id="opinionFooter" style="display:none;">
+            <span class="sel-count" id="selCount">已选 0 个观点</span>
+            <button class="btn btn-primary" onclick="addSelectedOpinions()">＋ 添加所选到任务列表</button>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end;">
+          <button class="btn btn-outline" onclick="alert('演示稿：已添加到下方任务列表')">＋ 添加到任务列表</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar-between">
+          <div>
+            <div class="card-title" style="margin-bottom:2px;">任务列表</div>
+            <span class="count-note" id="taskCount">共 5 条：3 已完成 · 1 生成中 · 1 待处理</span>
+          </div>
+          <button class="btn btn-primary lg" id="genBtn" onclick="alert('演示稿：点击后任务进入后台队列异步处理，界面不阻塞')">🚀 开始生成（5）</button>
+        </div>
+        <table class="table">
+          <thead>
+            <tr><th>文章链接</th><th>我的观点</th><th>状态</th><th style="width:150px;">操作</th></tr>
+          </thead>
+          <tbody id="taskBody">
+            <tr>
+              <td class="url-cell">https://mp.weixin.qq.com/s/abc123demo</td>
+              <td class="opinion-cell">AI 工具降本逻辑讲得透，但中小企业落地难的问题被忽略了…</td>
+              <td><span class="chip completed">已完成</span></td>
+              <td>
+                <span class="link" onclick="openResult()">查看</span> ·
+                <span class="link" onclick="alert('演示稿：复制 Markdown 到剪贴板')">复制</span> ·
+                <span class="link" onclick="alert('演示稿：重新调用 AI 生成')">重新生成</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="url-cell">https://mp.weixin.qq.com/s/def456demo</td>
+              <td class="opinion-cell">大模型价格战对开发者是利好，但要看长期生态…</td>
+              <td><span class="chip completed">已完成</span></td>
+              <td>
+                <span class="link" onclick="openResult()">查看</span> ·
+                <span class="link" onclick="alert('演示稿：复制 Markdown 到剪贴板')">复制</span> ·
+                <span class="link" onclick="alert('演示稿：重新调用 AI 生成')">重新生成</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="url-cell">https://zhuanlan.zhihu.com/p/789demo</td>
+              <td class="opinion-cell">这篇的论证方法有问题，样本量太小就下结论…</td>
+              <td><span class="chip processing">生成中</span></td>
+              <td><span class="link" onclick="alert('演示稿：取消该任务')">取消</span></td>
+            </tr>
+            <tr>
+              <td class="url-cell">https://mp.weixin.qq.com/s/ghi012demo</td>
+              <td class="opinion-cell">平台算法调整后，小号反而有流量机会，想展开聊聊…</td>
+              <td><span class="chip pending">待处理</span></td>
+              <td><span class="link" onclick="alert('演示稿：从列表移除')">移除</span></td>
+            </tr>
+            <tr>
+              <td class="url-cell">https://weibo.com/ttarticle/xxx</td>
+              <td class="opinion-cell">这条可以和上一条结合起来写个系列…</td>
+              <td><span class="chip failed">失败</span></td>
+              <td>
+                <span class="link" onclick="alert('演示稿：查看失败原因（如：链接无法访问 / AI 调用超时）">原因</span> ·
+                <span class="link" onclick="alert('演示稿：重试该任务')">重试</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ========== 页面：生文-头条号（预留） ========== -->
+    <div class="page" id="page-toutiao">
+      <div class="card">
+        <div class="placeholder">
+          <div class="big">📰</div>
+          <h3>头条号渠道 · 即将上线</h3>
+          <p>菜单位置已预留。上线后与微信公众号共用任务流程，仅系统提示词不同（更偏资讯快节奏风格）。</p>
+          <p style="margin-top:10px;">新增渠道 = 注册一份渠道提示词配置，无需改代码。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 页面：历史记录 ========== -->
+    <div class="page" id="page-history">
+      <div class="card">
+        <div class="toolbar-between">
+          <div class="card-title">历史记录</div>
+          <div style="display:flex; gap:10px;">
+            <input class="input" style="width:220px;" placeholder="🔍 搜索标题 / 关键词">
+            <select class="select" style="width:130px;"><option>全部渠道</option><option>微信公众号</option></select>
+          </div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr><th>生成时间</th><th>标题</th><th>渠道</th><th>状态</th><th style="width:110px;">操作</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2026-09-02 09:41</td><td>AI 工具真的能帮中小企业省钱吗？我们试了三个月</td>
+              <td>微信公众号</td><td><span class="chip completed">已完成</span></td>
+              <td><span class="link" onclick="openResult()">查看</span></td>
+            </tr>
+            <tr>
+              <td>2026-09-01 18:20</td><td>大模型价格战：开发者该高兴还是该担心？</td>
+              <td>微信公众号</td><td><span class="chip completed">已完成</span></td>
+              <td><span class="link" onclick="openResult()">查看</span></td>
+            </tr>
+            <tr>
+              <td>2026-09-01 10:05</td><td>别急着下结论：聊聊小样本研究的陷阱</td>
+              <td>微信公众号</td><td><span class="chip failed">失败</span></td>
+              <td><span class="link" onclick="alert('演示稿：查看失败原因')">原因</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ========== 页面：API 配置 ========== -->
+    <div class="page" id="page-api">
+      <div class="card">
+        <div class="card-title">API 配置</div>
+        <div class="card-desc">按「能力类型」分别配置；每个能力有一套全局默认配置，单个渠道可开启专属配置覆盖。API Key 加密存储在本地，不上传任何服务器。</div>
+
+        <!-- 能力类型 Tabs -->
+        <div class="tabs">
+          <div class="tab active" data-cfg="cfg-text" onclick="switchCfg(this)">📝 生文</div>
+          <div class="tab" data-cfg="cfg-image" onclick="switchCfg(this)">🖼️ 生图 <span class="tag-soon">预留</span></div>
+          <div class="tab" data-cfg="cfg-video" onclick="switchCfg(this)">🎬 生视频 <span class="tag-soon">预留</span></div>
+        </div>
+
+        <!-- 生文配置 -->
+        <div class="cfg-panel" id="cfg-text">
+          <div class="card-title" style="font-size:13px;">全局默认配置（生文能力下所有渠道共用）</div>
+          <div class="config-grid" style="margin-top:12px;">
+            <div class="form-row full">
+              <label class="form-label">接口地址 base_url</label>
+              <input class="input" type="text" value="https://api.siliconflow.cn/v1">
+              <div class="form-hint">凡兼容 OpenAI 协议的服务商均可填写（OpenAI / 硅基流动 / DeepSeek / 智谱等）</div>
+            </div>
+            <div class="form-row">
+              <label class="form-label">API Key</label>
+              <input class="input" type="password" value="sk-1234567890abcdef">
+            </div>
+            <div class="form-row">
+              <label class="form-label">模型唯一标识 model_id</label>
+              <input class="input" type="text" value="Qwen/Qwen2.5-72B-Instruct">
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--border); margin:18px 0 14px;"></div>
+
+          <div class="card-title" style="font-size:13px;">渠道专属配置（覆盖全局默认，可选）</div>
+          <div class="card-desc">开启后，该渠道生成时使用专属配置而非上方全局默认</div>
+
+          <div class="override-item">
+            <div class="override-head">
+              <span class="name">💬 微信公众号</span>
+              <span class="note">当前：使用全局默认</span>
+              <div class="right">
+                <span style="font-size:12px; color:var(--text-muted);">专属配置</span>
+                <label class="switch"><input type="checkbox" onchange="toggleOverride(this)"><span class="slider"></span></label>
+              </div>
+            </div>
+            <div class="override-body">
+              <div class="config-grid">
+                <div class="form-row full">
+                  <label class="form-label">接口地址 base_url</label>
+                  <input class="input" type="text" placeholder="留空则继承全局默认">
+                </div>
+                <div class="form-row">
+                  <label class="form-label">API Key</label>
+                  <input class="input" type="password" placeholder="留空则继承全局默认">
+                </div>
+                <div class="form-row">
+                  <label class="form-label">模型唯一标识 model_id</label>
+                  <input class="input" type="text" placeholder="留空则继承全局默认">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="override-item">
+            <div class="override-head">
+              <span class="name">📰 头条号</span>
+              <span class="note">当前：使用全局默认 · 渠道即将上线</span>
+              <div class="right">
+                <span style="font-size:12px; color:var(--text-muted);">专属配置</span>
+                <label class="switch"><input type="checkbox" disabled onchange="toggleOverride(this)"><span class="slider"></span></label>
+              </div>
+            </div>
+            <div class="override-body">
+              <div class="config-grid">
+                <div class="form-row full">
+                  <label class="form-label">接口地址 base_url</label>
+                  <input class="input" type="text" placeholder="留空则继承全局默认">
+                </div>
+                <div class="form-row">
+                  <label class="form-label">API Key</label>
+                  <input class="input" type="password" placeholder="留空则继承全局默认">
+                </div>
+                <div class="form-row">
+                  <label class="form-label">模型唯一标识 model_id</label>
+                  <input class="input" type="text" placeholder="留空则继承全局默认">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+            <button class="btn btn-outline" onclick="alert('演示稿：测试连通性（调用一次轻量接口验证配置）')">🔌 测试连接</button>
+            <button class="btn btn-primary" onclick="alert('演示稿：保存到本地加密存储')">保存配置</button>
+          </div>
+        </div>
+
+        <!-- 生图配置（预留） -->
+        <div class="cfg-panel" id="cfg-image" style="display:none;">
+          <div class="placeholder" style="padding:40px 0 20px;">
+            <div class="big">🎨</div>
+            <h3>生图能力 · 预留</h3>
+            <p>界面已预留，功能上线前可提前配置 api_key / base_url / model_id，上线后即用。</p>
+          </div>
+          <div class="config-grid" style="opacity:.65; pointer-events:none;">
+            <div class="form-row full">
+              <label class="form-label">接口地址 base_url</label>
+              <input class="input" type="text" placeholder="https://api.xxx.com/v1">
+            </div>
+            <div class="form-row">
+              <label class="form-label">API Key</label>
+              <input class="input" type="password" placeholder="sk-xxxx">
+            </div>
+            <div class="form-row">
+              <label class="form-label">模型唯一标识 model_id</label>
+              <input class="input" type="text" placeholder="例如：Kwai-Kolors/Kolors">
+            </div>
+          </div>
+        </div>
+
+        <!-- 生视频配置（预留） -->
+        <div class="cfg-panel" id="cfg-video" style="display:none;">
+          <div class="placeholder" style="padding:40px 0 20px;">
+            <div class="big">🎥</div>
+            <h3>生视频能力 · 预留</h3>
+            <p>界面已预留，功能上线前可提前配置 api_key / base_url / model_id，上线后即用。</p>
+          </div>
+          <div class="config-grid" style="opacity:.65; pointer-events:none;">
+            <div class="form-row full">
+              <label class="form-label">接口地址 base_url</label>
+              <input class="input" type="text" placeholder="https://api.xxx.com/v1">
+            </div>
+            <div class="form-row">
+              <label class="form-label">API Key</label>
+              <input class="input" type="password" placeholder="sk-xxxx">
+            </div>
+            <div class="form-row">
+              <label class="form-label">模型唯一标识 model_id</label>
+              <input class="input" type="text" placeholder="例如：video-model-v1">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 页面：渠道管理 ========== -->
+    <div class="page" id="page-channel">
+      <div class="card">
+        <div class="card-title">渠道管理</div>
+        <div class="card-desc">每个渠道绑定一份独立的系统提示词；新增渠道即新增一份提示词配置</div>
+        <table class="table">
+          <thead>
+            <tr><th>所属能力</th><th>渠道</th><th>状态</th><th>提示词</th><th style="width:120px;">操作</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>📝 生文</td><td><b>微信公众号</b></td>
+              <td><span class="chip completed">已上线</span></td>
+              <td class="opinion-cell">资深新媒体创作者风格，800–1500 字公众号图文…</td>
+              <td><span class="link" onclick="alert('演示稿：查看/编辑系统提示词（Markdown 编辑器）')">查看/编辑</span></td>
+            </tr>
+            <tr>
+              <td>📝 生文</td><td><b>头条号</b></td>
+              <td><span class="chip pending">即将上线</span></td>
+              <td class="opinion-cell">资讯快节奏风格，前三行抓住读者…</td>
+              <td><span class="link" onclick="alert('演示稿：查看/编辑系统提示词')">查看/编辑</span></td>
+            </tr>
+            <tr>
+              <td>🖼️ 生图</td><td><b>（未规划具体渠道）</b></td>
+              <td><span class="chip pending">预留</span></td>
+              <td class="opinion-cell">—</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ========== 页面：通用设置 ========== -->
+    <div class="page" id="page-general">
+      <div class="card">
+        <div class="card-title">通用设置</div>
+        <div class="card-desc">演示稿，仅示意设置项结构</div>
+        <div class="form-row">
+          <label class="form-label">数据存储目录</label>
+          <div style="display:flex; gap:10px;">
+            <input class="input" type="text" value="D:\ContentForge\data" readonly>
+            <button class="btn btn-outline" onclick="alert('演示稿：选择目录')">更改</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">日志级别</label>
+          <select class="select" style="width:200px;"><option>INFO</option><option>DEBUG</option><option>WARNING</option></select>
+        </div>
+        <div class="form-row">
+          <label class="form-label">开机自启</label>
+          <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== 模态框：生成结果 ========== -->
+<div class="modal-mask" id="resultModal">
+  <div class="modal">
+    <div class="modal-head">
+      <span>生成结果 · 微信公众号</span>
+      <button class="btn btn-ghost" onclick="closeResult()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="result-content">
+        <h2>AI 工具真的能帮中小企业省钱吗？我们团队试了三个月</h2>
+        <p>最近读到一篇讲 AI 工具降本逻辑的文章（见文末原文链接），观点很扎实：AI 不是来抢工作的，是来接走重复劳动的。</p>
+        <p><b>但我想补充一个被忽略的真问题：</b>中小企业落地 AI，难的不是买工具，而是没有人力去"养"工具。</p>
+        <p>我们团队过去三个月的真实数据：文案初稿时间从 4 小时压到 40 分钟，但前提是有专人调了两周提示词模板。这笔隐性成本，几乎没人提。</p>
+        <p style="color:var(--text-muted);">…（演示稿内容截断，实际为 800–1500 字完整图文）</p>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="alert('演示稿：在编辑器中修改后保存')">✏️ 编辑</button>
+      <button class="btn btn-outline" onclick="alert('演示稿：复制 Markdown 到剪贴板')">📋 复制 Markdown</button>
+      <button class="btn btn-outline" onclick="alert('演示稿：导出 .md 文件')">⬇️ 导出</button>
+      <button class="btn btn-primary" onclick="alert('演示稿：重新调用 AI 生成')">🔄 重新生成</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 导航切换
+  document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      item.classList.add('active');
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+      document.getElementById('page-' + item.dataset.page).classList.add('show');
+      // 更新面包屑
+      const names = {
+        wechat: '生文 / <b>微信公众号</b>',
+        toutiao: '生文 / <b>头条号</b>',
+        history: '<b>历史记录</b>',
+        api: '设置 / <b>API 配置</b>',
+        channel: '设置 / <b>渠道管理</b>',
+        general: '设置 / <b>通用设置</b>'
+      };
+      document.getElementById('crumb').innerHTML = names[item.dataset.page] || '';
+    });
+  });
+
+  // API 配置能力 Tab 切换
+  function switchCfg(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.cfg-panel').forEach(p => p.style.display = 'none');
+    document.getElementById(tab.dataset.cfg).style.display = 'block';
+  }
+
+  // 渠道专属配置开关
+  function toggleOverride(cb) {
+    cb.closest('.override-item').classList.toggle('on', cb.checked);
+    const note = cb.closest('.override-head').querySelector('.note');
+    if (note) note.textContent = cb.checked ? '当前：使用专属配置' : '当前：使用全局默认';
+  }
+
+  // ===== AI 生成观点（演示）=====
+  function genOpinions() {
+    const panel = document.getElementById('opinionPanel');
+    panel.style.display = 'block';
+    document.getElementById('opinionLoading').style.display = 'block';
+    document.getElementById('opinionList').style.display = 'none';
+    document.getElementById('opinionFooter').style.display = 'none';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // 模拟「抓取原文 + AI 生成观点」的耗时
+    setTimeout(() => {
+      document.getElementById('opinionLoading').style.display = 'none';
+      document.getElementById('opinionList').style.display = 'block';
+      document.getElementById('opinionFooter').style.display = 'flex';
+    }, 900);
+  }
+  function hideOpinions() { document.getElementById('opinionPanel').style.display = 'none'; }
+
+  // 勾选/取消候选观点
+  document.querySelectorAll('.opinion-item').forEach(item => {
+    item.addEventListener('click', () => {
+      item.classList.toggle('selected');
+      const n = document.querySelectorAll('.opinion-item.selected').length;
+      document.getElementById('selCount').textContent =
+        n ? `已选 ${n} 个观点（将生成 ${n} 篇图文）` : '已选 0 个观点';
+    });
+  });
+
+  // 将所选观点添加为任务（一个观点 = 一个任务）
+  function addSelectedOpinions() {
+    const selected = [...document.querySelectorAll('.opinion-item.selected')];
+    if (!selected.length) { alert('演示稿：请先勾选至少一个观点'); return; }
+    const url = document.querySelector('#page-wechat .input').value || '(未填写链接)';
+    const tbody = document.getElementById('taskBody');
+    selected.forEach(item => {
+      const text = item.querySelector('.op-text').textContent;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="url-cell">${url}</td>
+        <td class="opinion-cell">${text}</td>
+        <td><span class="chip pending">待处理</span></td>
+        <td><span class="link" onclick="this.closest('tr').remove(); refreshCount();">移除</span></td>`;
+      tbody.appendChild(tr);
+    });
+    // 重置候选区
+    selected.forEach(item => item.classList.remove('selected'));
+    document.getElementById('selCount').textContent = '已选 0 个观点';
+    hideOpinions();
+    refreshCount();
+    alert(`演示稿：已添加 ${selected.length} 个任务（同一链接 × ${selected.length} 个观点 = ${selected.length} 篇图文）`);
+  }
+
+  // 刷新任务列表计数与生成按钮
+  function refreshCount() {
+    const rows = [...document.querySelectorAll('#taskBody tr')];
+    const counts = { completed: 0, processing: 0, pending: 0, failed: 0 };
+    rows.forEach(r => {
+      const chip = r.querySelector('.chip');
+      if (chip) {
+        const status = [...chip.classList].find(c => c !== 'chip');
+        if (status in counts) counts[status]++;
+      }
+    });
+    const parts = [`共 ${rows.length} 条：${counts.completed} 已完成 · ${counts.processing} 生成中 · ${counts.pending} 待处理`];
+    if (counts.failed) parts.push(`· ${counts.failed} 失败`);
+    document.getElementById('taskCount').textContent = parts.join(' ');
+    document.getElementById('genBtn').textContent = `🚀 开始生成（${rows.length}）`;
+  }
+
+  // 结果模态框
+  function openResult() { document.getElementById('resultModal').classList.add('show'); }
+  function closeResult() { document.getElementById('resultModal').classList.remove('show'); }
+  document.getElementById('resultModal').addEventListener('click', e => {
+    if (e.target.id === 'resultModal') closeResult();
+  });
+</script>
+</body>
+</html>

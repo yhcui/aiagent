@@ -1,0 +1,37 @@
+{
+  "api_config": {
+    "text": {
+      "default": {
+        "base_url": "https://llm-tgs20vajm1ikqveg.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+        "api_key": "sk-ws-H.PMDPERL.WVqD.MEUCIQCoyt-2zqIzjHGrndlySYKFdwFk0epn37CGsLj5zI-qiQIgDh-sisU8ymNm50b9OqRBIk6H7OYc6i7ohrWOMMipX9s",
+        "model_id": "kimi-k2.7-code"
+      },
+      "overrides": {
+        "toutiao": {
+          "base_url": "https://toutiao.com/v1",
+          "api_key": "sk-toutiao",
+          "model_id": "toutiao-model"
+        }
+      }
+    },
+    "image": {
+      "default": {
+        "base_url": "",
+        "api_key": "",
+        "model_id": ""
+      },
+      "overrides": {}
+    },
+    "video": {
+      "default": {
+        "base_url": "",
+        "api_key": "",
+        "model_id": ""
+      },
+      "overrides": {}
+    }
+  },
+  "data_dir": "D:\\OpenCode-Project\\aiagent\\ai-product\\content-forge\\app\\data",
+  "log_level": "INFO",
+  "auto_start": false
+}

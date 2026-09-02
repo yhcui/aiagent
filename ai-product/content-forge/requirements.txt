@@ -1,0 +1,10 @@
+# ContentForge 依赖
+PyQt6>=6.6.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+openai>=1.12.0
+loguru>=0.7.0
+SQLAlchemy>=2.0.0
+pyyaml>=6.0
+keyring>=25.0.0
