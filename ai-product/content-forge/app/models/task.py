@@ -22,6 +22,7 @@ class Task:
     original_content: str = ""
     generated_content: str = ""
     error_message: str = ""
+    image_paths: list[str] = field(default_factory=list)  # 生成的图片路径列表
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     completed_at: datetime = None
@@ -45,6 +46,7 @@ class Task:
             "original_content": self.original_content,
             "generated_content": self.generated_content,
             "error_message": self.error_message,
+            "image_paths": self.image_paths,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,

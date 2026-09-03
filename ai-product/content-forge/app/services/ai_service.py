@@ -13,6 +13,11 @@ class AIServiceInterface(ABC):
         pass
 
     @abstractmethod
+    def generate_image(self, prompt: str, model_id: str = None) -> bytes | None:
+        """生成图片，返回图片二进制数据"""
+        pass
+
+    @abstractmethod
     def test_connection(self, base_url: str, api_key: str, model_id: str) -> bool:
         pass
 
@@ -58,6 +63,29 @@ class OpenAICompatibleService(AIServiceInterface):
         except Exception as e:
             logger.error(f"AI 生成失败：{e}")
             raise
+
+    def generate_image(self, prompt: str, model_id: str = None) -> bytes | None:
+        """使用 DALL-E 或兼容的图片生成 API"""
+        client = self._get_client()
+        model = model_id or self.model_id
+        if not model:
+            raise ValueError("未指定图片生成模型，请设置 image 模型的 model_id")
+        try:
+            response = client.images.generate(
+                model=model,
+                prompt=prompt,
+                n=1,
+                size="1024x1024",
+                quality="standard",
+            )
+            # 获取图片 URL 并下载
+            image_url = response.data[0].url
+            import urllib.request
+            with urllib.request.urlopen(image_url) as resp:
+                return resp.read()
+        except Exception as e:
+            logger.error(f"AI 图片生成失败：{e}")
+            return None
 
     def test_connection(self, base_url: str, api_key: str, model_id: str) -> bool:
         try:

@@ -143,12 +143,18 @@ class TaskManager(QObject):
             # 2. 获取渠道系统提示词
             system_prompt = self.channel_manager.get_system_prompt(task.channel)
 
-            # 3. 生成图文
-            generated = self._generator.generate_article(
+            # 3. 生成图文（包含图片）
+            export_dir = self.app_config.get_directory("exports")
+            generated, image_paths = self._generator.generate_article_with_images(
                 system_prompt=system_prompt,
                 user_opinion=task.user_opinion,
                 original_content=task.original_content,
+                export_dir=export_dir,
             )
+            
+            # 保存图片路径信息
+            if image_paths:
+                task.image_paths = [str(p) for p in image_paths]
             
             logger.info(f"[DEBUG] 生成内容长度：{len(generated) if generated else 0}")
 
@@ -171,8 +177,8 @@ class TaskManager(QObject):
     def _auto_export(self, task: Task):
         """自动导出任务为 .md 文件"""
         try:
-            # 创建导出目录
-            export_dir = self.app_config.data_dir / "exports"
+            # 创建导出目录（使用用户配置的路径）
+            export_dir = self.app_config.get_directory("exports")
             export_dir.mkdir(parents=True, exist_ok=True)
             
             # 生成文件名（使用时间戳+任务ID前8位）
@@ -212,6 +218,25 @@ class TaskManager(QObject):
                 task.status = TaskStatus.FAILED
                 task.error_message = "用户取消"
                 self._update_task(task)
+
+    def clear_all(self):
+        """清除所有任务及其导出文件"""
+        import shutil
+        
+        # 清除数据库中的所有任务
+        for task in self.tasks:
+            self.storage.delete_task(task.id)
+        
+        # 清空内存中的任务列表
+        self.tasks.clear()
+        
+        # 删除导出的文件目录（使用用户配置的路径）
+        export_dir = self.app_config.get_directory("exports")
+        if export_dir.exists():
+            shutil.rmtree(export_dir, ignore_errors=True)
+            logger.info(f"已删除导出目录：{export_dir}")
+        
+        logger.info("已清除所有任务及导出文件")
         logger.info("已取消所有待处理任务")
 
     def regenerate(self, task_id: str):

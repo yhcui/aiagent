@@ -35,6 +35,7 @@ class StorageService:
                 original_content TEXT DEFAULT '',
                 generated_content TEXT DEFAULT '',
                 error_message TEXT DEFAULT '',
+                image_paths TEXT DEFAULT '[]',
                 created_at TEXT DEFAULT (datetime('now')),
                 updated_at TEXT DEFAULT (datetime('now')),
                 completed_at TEXT
@@ -97,15 +98,17 @@ class StorageService:
 
     # ===== 任务 CRUD =====
     def save_task(self, task: Task):
+        import json
         conn = self._get_conn()
         conn.execute(
             """INSERT OR REPLACE INTO tasks
-               (id, url, user_opinion, channel, status, original_content, generated_content, error_message, created_at, updated_at, completed_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               (id, url, user_opinion, channel, status, original_content, generated_content, error_message, image_paths, created_at, updated_at, completed_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 task.id, task.url, task.user_opinion, task.channel,
                 task.status.value if hasattr(task.status, 'value') else task.status,
                 task.original_content, task.generated_content, task.error_message,
+                json.dumps(getattr(task, 'image_paths', []), ensure_ascii=False),
                 task.created_at.isoformat(), task.updated_at.isoformat(),
                 task.completed_at.isoformat() if task.completed_at else None,
             ),
@@ -124,6 +127,12 @@ class StorageService:
         conn = self._get_conn()
         row = conn.execute("SELECT * FROM tasks WHERE id=?", (task_id,)).fetchone()
         return Task.from_dict(dict(row)) if row else None
+
+    def delete_task(self, task_id: str):
+        """删除单个任务"""
+        conn = self._get_conn()
+        conn.execute("DELETE FROM tasks WHERE id=?", (task_id,))
+        conn.commit()
 
     def update_task(self, task: Task):
         task.updated_at = __import__("datetime").datetime.now()

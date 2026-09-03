@@ -425,9 +425,26 @@ class MainWindow(QWidget):
         return w
 
     def _update_api_status(self):
-        cfg = self.config.get_api_config("text")
-        if cfg.get("api_key"):
-            self._api_status_btn.setText("🔌 API 状态：已配置")
+        text_cfg = self.config.get_api_config("text")
+        image_cfg = self.config.get_api_config("image")
+        text_ok = bool(text_cfg.get("api_key"))
+        image_ok = bool(image_cfg.get("api_key"))
+
+        # 状态文字
+        parts = []
+        if text_ok:
+            parts.append("生文✅")
+        else:
+            parts.append("生文❌")
+        if image_ok:
+            parts.append("生图✅")
+        else:
+            parts.append("生图❌")
+        self._api_status_btn.setText(f"🔌 API：{'  '.join(parts)}")
+
+        # 全部配置完成用绿色，否则用默认色
+        all_ok = text_ok and image_ok
+        if all_ok:
             self._api_status_btn.setStyleSheet("""
                 QPushButton {
                     border: 1px solid #34c724;
@@ -436,11 +453,30 @@ class MainWindow(QWidget):
                     font-size: 12px;
                     color: #34c724;
                     background: #e8f8e5;
-                    
+                }
+            """)
+        elif text_ok:
+            self._api_status_btn.setStyleSheet("""
+                QPushButton {
+                    border: 1px solid #f5a623;
+                    border-radius: 8px;
+                    padding: 7px 14px;
+                    font-size: 12px;
+                    color: #f5a623;
+                    background: #fff8e5;
                 }
             """)
         else:
-            self._api_status_btn.setText("🔌 API 状态：未配置")
+            self._api_status_btn.setStyleSheet("""
+                QPushButton {
+                    border: 1px solid #e8eaf0;
+                    border-radius: 8px;
+                    padding: 7px 14px;
+                    font-size: 12px;
+                    color: #8f959e;
+                    background: transparent;
+                }
+            """)
 
     # ==================== 页面：微信公众号（生文主页面）====================
 
@@ -701,6 +737,20 @@ class MainWindow(QWidget):
         """)
         self.start_gen_btn.clicked.connect(self._on_start_generation)
         toolbar_lay.addWidget(self.start_gen_btn)
+        
+        # 清除所有任务按钮
+        clear_all_btn = QPushButton("🗑 清除全部")
+        clear_all_btn.setStyleSheet("""
+            QPushButton {
+                background: white; color: #f54a45; border: 1px solid #f54a45;
+                border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 500;
+            }
+            QPushButton:hover { background: #fff2f0; }
+            QPushButton:disabled { background: #c0c7cf; color: #999; border-color: #c0c7cf; cursor: not-allowed; }
+        """)
+        clear_all_btn.clicked.connect(self._on_clear_all_tasks)
+        toolbar_lay.addWidget(clear_all_btn)
+        
         c2_lay.addWidget(toolbar)
 
         # 任务表格
@@ -1127,6 +1177,27 @@ class MainWindow(QWidget):
         self.task_manager.remove_task(task_id)
         self._update_task_table()
 
+    def _on_clear_all_tasks(self):
+        """清除所有任务和导出文件"""
+        if not self.task_manager.tasks:
+            QMessageBox.information(self, "提示", "当前没有任务需要清除")
+            return
+        
+        reply = QMessageBox.warning(
+            self, 
+            "确认清除", 
+            f"确定要删除所有 {len(self.task_manager.tasks)} 个任务及其导出文件吗？\n\n此操作不可撤销！",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            self.task_manager.clear_all()
+            self._update_task_table()
+            self.start_gen_btn.setText("🚀 开始生成（0）")
+            self.start_gen_btn.setEnabled(False)
+            QMessageBox.information(self, "已清除", f"已删除所有任务及导出文件")
+
     def _load_tasks(self):
         self._update_task_table()
 
@@ -1243,12 +1314,28 @@ class MainWindow(QWidget):
             QTabBar::tab:hover:!selected { background: #f2f4f9; }
         """)
         self.api_tabs.addTab(self._build_api_tab("text"), "📝 生文")
-        self.api_tabs.addTab(self._build_api_tab("image", reserved=True), "🖼️ 生图")
+        self.api_tabs.addTab(self._build_api_tab("image"), "🖼️ 生图")
         self.api_tabs.addTab(self._build_api_tab("video", reserved=True), "🎬 生视频")
         c_lay.addWidget(self.api_tabs)
         inner_lay.addWidget(c)
         page.setWidget(inner)
         return page
+
+    # 能力类型元数据：标题 / 提示 / base_url 占位符 / model_id 占位符
+    _ABILITY_META = {
+        "text": {
+            "title": "全局默认配置（生文能力下所有渠道共用）",
+            "hint": "凡兼容 OpenAI 协议的服务商均可填写（硅基流动 / DeepSeek / 智谱 / OpenAI 等）",
+            "base_url_ph": "https://api.siliconflow.cn/v1",
+            "model_ph": "Qwen/Qwen2.5-72B-Instruct",
+        },
+        "image": {
+            "title": "全局默认配置（生图能力下所有渠道共用）",
+            "hint": "凡兼容 OpenAI 图片协议的服务商均可填写（硅基流动 / OpenAI / 智谱等）；配置后生成文章时将自动配图",
+            "base_url_ph": "https://api.siliconflow.cn/v1",
+            "model_ph": "black-forest-labs/FLUX.1-schnell",
+        },
+    }
 
     def _build_api_tab(self, ability: str, reserved: bool = False) -> QWidget:
         w = QWidget()
@@ -1266,12 +1353,13 @@ class MainWindow(QWidget):
             return w
 
         cfg = self.config.get_api_config(ability)
-        lay.addWidget(QLabel("全局默认配置（生文能力下所有渠道共用）"))
-        lay.addWidget(hint_text("凡兼容 OpenAI 协议的服务商均可填写（硅基流动 / DeepSeek / 智谱 / OpenAI 等）"))
+        meta = self._ABILITY_META.get(ability, self._ABILITY_META["text"])
+        lay.addWidget(QLabel(meta["title"]))
+        lay.addWidget(hint_text(meta["hint"]))
 
-        base_url_w = self._api_input("接口地址 base_url", cfg.get("base_url", ""), placeholder="https://api.siliconflow.cn/v1")
+        base_url_w = self._api_input("接口地址 base_url", cfg.get("base_url", ""), placeholder=meta["base_url_ph"])
         api_key_w = self._api_input("API Key", cfg.get("api_key", ""), is_password=True)
-        model_id_w = self._api_input("模型唯一标识 model_id", cfg.get("model_id", ""), placeholder="Qwen/Qwen2.5-72B-Instruct")
+        model_id_w = self._api_input("模型唯一标识 model_id", cfg.get("model_id", ""), placeholder=meta["model_ph"])
         for wdg in [base_url_w, api_key_w, model_id_w]:
             lay.addWidget(wdg)
 
@@ -1539,6 +1627,57 @@ class MainWindow(QWidget):
         c1_lay.addWidget(dir_row)
         inner_lay.addWidget(c1)
 
+        # 目录配置（独立管理）
+        c_dir = card_frame()
+        c_dir_lay = QVBoxLayout(c_dir)
+        c_dir_lay.setContentsMargins(20, 20, 20, 20)
+        c_dir_lay.setSpacing(12)
+
+        c_dir_lay.addWidget(section_title("子目录配置"))
+        c_dir_lay.addWidget(hint_text("配置数据存储下的各功能子目录名称，支持自定义"))
+
+        dir_config = self.config.get("directory_config", {
+            "exports": "exports",
+            "images": "images",
+            "templates": "templates",
+            "logs": "logs",
+        })
+        
+        self.dir_inputs = {}
+        self._dir_previews = []  # (preview_label, key) 用于根路径变化时更新
+        for key, label in [("exports", "导出文件"), ("images", "生成图片"), ("templates", "模板文件"), ("logs", "日志文件")]:
+            row = QWidget()
+            row_lay = QHBoxLayout(row)
+            row_lay.setContentsMargins(0, 0, 0, 0)
+            
+            lbl = QLabel(label)
+            lbl.setStyleSheet("font-size: 13px; font-weight: 500;")
+            lbl.setMinimumWidth(90)
+            row_lay.addWidget(lbl)
+            
+            inp = QLineEdit(dir_config.get(key, key))
+            inp.setMinimumWidth(200)
+            inp.setStyleSheet("border: 1px solid #ddd; border-radius: 4px; padding: 6px 10px; font-size: 12px;")
+            self.dir_inputs[key] = inp
+            row_lay.addWidget(inp)
+            
+            # 显示完整路径预览
+            preview = QLabel(f"{data_dir}/{dir_config.get(key, key)}")
+            preview.setStyleSheet("color: #999; font-size: 11px;")
+            preview.setMinimumWidth(250)
+            row_lay.addWidget(preview)
+            self._dir_previews.append((preview, key))
+            
+            # 子目录输入变化时更新预览
+            inp.textChanged.connect(self._update_dir_previews)
+            
+            c_dir_lay.addWidget(row)
+        
+        # 根路径变化时也更新所有子目录预览
+        self.general_path_input.textChanged.connect(self._update_dir_previews)
+        
+        inner_lay.addWidget(c_dir)
+
         # 日志设置
         c2 = card_frame()
         c2_lay = QVBoxLayout(c2)
@@ -1608,16 +1747,31 @@ class MainWindow(QWidget):
         return page
 
     def _browse_data_dir(self):
-        """浏览选择数据目录"""
+        """浏览选择数据目录（仅更新输入框，保存时统一写入）"""
         from PyQt6.QtWidgets import QFileDialog
         dir_path = QFileDialog.getExistingDirectory(self, "选择数据存储目录")
         if dir_path:
             self.general_path_input.setText(dir_path)
-            self.config.data_dir = dir_path
+
+    def _update_dir_previews(self, *args):
+        """更新子目录路径预览"""
+        base = self.general_path_input.text()
+        for preview, key in self._dir_previews:
+            inp = self.dir_inputs.get(key)
+            sub = inp.text().strip() if inp else key
+            preview.setText(f"{base}/{sub}" if base and sub else "")
 
     def _save_general_settings(self):
         """保存通用设置"""
-        self.config.set("data_dir", self.general_path_input.text())
+        # 通过 data_dir 属性设置器同步更新内存与配置文件
+        self.config.data_dir = self.general_path_input.text()
         self.config.log_level = self.log_combo.currentText()
+        
+        # 保存目录配置
+        dir_config = {}
+        for key, inp in self.dir_inputs.items():
+            dir_config[key] = inp.text().strip() or key
+        self.config.set("directory_config", dir_config)
+        
         self.config.save()
-        QMessageBox.information(self, "保存成功", "通用设置已保存")
+        QMessageBox.information(self, "保存成功", "通用设置已保存（含目录配置）")
