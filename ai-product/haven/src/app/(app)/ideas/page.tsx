@@ -11,16 +11,7 @@ export default async function IdeasPage() {
      ORDER BY is_completed ASC, created_at DESC`
   ).all() as unknown[];
 
-  // node:sqlite 返回的对象带特殊原型，需序列化为纯对象才能传给 Client Component
   const initialIdeas = JSON.parse(JSON.stringify(rows)) as Idea[];
 
-  return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold text-haven-text">💡 想法</h1>
-        <p className="text-haven-muted mt-1">捕捉灵感，让想法不再溜走</p>
-      </header>
-      <IdeaList initialIdeas={initialIdeas} />
-    </div>
-  );
+  return <IdeaList initialIdeas={initialIdeas} />;
 }

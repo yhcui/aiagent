@@ -1,16 +1,23 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Check, Trash2, Circle } from 'lucide-react';
 import { toggleIdea, deleteIdea } from '../api';
 import type { Idea } from '@/lib/db';
 
 interface Props {
   idea: Idea;
+  index: number;
   onChanged: () => void;
 }
 
-export default function IdeaItem({ idea, onChanged }: Props) {
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+}
+
+export default function IdeaItem({ idea, index, onChanged }: Props) {
   const handleToggle = async () => {
     try {
       await toggleIdea(idea.id);
@@ -29,45 +36,44 @@ export default function IdeaItem({ idea, onChanged }: Props) {
     }
   };
 
+  // 每张便签轻微随机倾斜，营造手账随意感
+  const rotate = ((index % 3) - 1) * 0.8;
+  const colorClass = `c${index % 5}`;
+
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -40 }}
-      transition={{ duration: 0.2 }}
-      className={`group bg-white rounded-2xl shadow-sm p-4 flex gap-3 items-start transition-shadow hover:shadow-md ${
-        idea.is_completed ? 'opacity-60' : ''
-      }`}
+      initial={{ opacity: 0, y: 20, rotate: rotate - 2 }}
+      animate={{ opacity: 1, y: 0, rotate }}
+      exit={{ opacity: 0, x: -60, rotate: -8 }}
+      transition={{ duration: 0.3, type: 'spring', stiffness: 120 }}
+      className={`idea-note ${colorClass} ${idea.is_completed ? 'done' : ''}`}
     >
-      {/* 完成按钮 */}
-      <button
-        onClick={handleToggle}
-        className={`flex-shrink-0 mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-          idea.is_completed
-            ? 'border-haven-success bg-haven-success text-white'
-            : 'border-haven-muted hover:border-haven-primary'
-        }`}
-      >
-        {idea.is_completed ? <Check size={14} /> : <Circle size={14} className="fill-transparent" />}
-      </button>
+      <div className="idea-pin" />
 
-      {/* 内容 */}
-      <p
-        className={`flex-1 text-base leading-relaxed break-words ${
-          idea.is_completed ? 'line-through text-haven-muted' : 'text-haven-text'
-        }`}
-      >
-        {idea.content}
-      </p>
+      <p className="idea-text">{idea.content}</p>
 
-      {/* 删除按钮 */}
-      <button
-        onClick={handleDelete}
-        className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-haven-muted hover:text-red-500 hover:bg-red-50 transition-all"
-      >
-        <Trash2 size={16} />
-      </button>
+      <div className="idea-actions">
+        <button
+          onClick={handleToggle}
+          className={`idea-check ${idea.is_completed ? 'done' : ''}`}
+        >
+          <span className="idea-check-box">
+            {idea.is_completed && (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </span>
+          {idea.is_completed ? '已入夜' : '划掉'}
+        </button>
+
+        <span className="idea-date">{formatDate(idea.created_at)}</span>
+
+        <button onClick={handleDelete} className="idea-delete" title="烧掉这张">
+          ✕
+        </button>
+      </div>
     </motion.div>
   );
 }

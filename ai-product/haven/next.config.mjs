@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverActions: true,
     // node:sqlite 是 Node.js 原生模块，不打包
     serverComponentsExternalPackages: ['node:sqlite'],
   },

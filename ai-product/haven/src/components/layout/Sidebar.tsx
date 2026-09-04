@@ -2,12 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Lightbulb, Home, LogOut } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
-  { href: '/', label: '首页', icon: Home },
-  { href: '/ideas', label: '想法', icon: Lightbulb },
+  { href: '/', label: '首页', icon: '🏠' },
+  { href: '/ideas', label: '想法', icon: '🔥' },
 ];
 
 export default function Sidebar() {
@@ -28,49 +27,49 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-16 lg:w-56 bg-white border-r border-gray-100 flex flex-col items-center lg:items-stretch py-6 px-2 lg:px-4 gap-2 shrink-0">
+    <aside className="sidebar-camp">
+      {/* 顶部挂灯 */}
+      <div className="camp-lantern">
+        <div className="camp-lantern-rope" />
+        <div className="camp-lantern-bulb" />
+      </div>
+
       {/* Logo */}
-      <Link href="/" className="flex items-center justify-center lg:justify-start gap-2 mb-8 px-2">
-        <span className="text-2xl">🏠</span>
-        <span className="hidden lg:block text-lg font-semibold text-haven-text">Haven</span>
+      <Link href="/" className="camp-logo">
+        <span className="camp-logo-badge">🏠</span>
+        <span className="camp-logo-text">Haven</span>
       </Link>
 
-      {/* 导航 */}
-      <nav className="flex flex-col gap-1 flex-1">
-        {navItems.map(({ href, label, icon: Icon }) => {
+      {/* 导航路标 */}
+      <nav className="camp-nav">
+        {navItems.map(({ href, label, icon }) => {
           const active = pathname === href;
           return (
             <Link
               key={href}
               href={href}
-              className={`flex items-center justify-center lg:justify-start gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                active
-                  ? 'bg-haven-primary bg-opacity-10 text-haven-primary'
-                  : 'text-haven-muted hover:bg-gray-50 hover:text-haven-text'
-              }`}
+              className={`camp-nav-item ${active ? 'active' : ''}`}
+              title={label}
             >
-              <Icon size={20} />
-              <span className="hidden lg:inline">{label}</span>
+              <span className="camp-icon">{icon}</span>
+              <span className="camp-label">{label}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* 登出 */}
+      {/* 离营 */}
       <button
         onClick={handleLogout}
         disabled={loggingOut}
-        className="flex items-center justify-center lg:justify-start gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-haven-muted hover:bg-red-50 hover:text-red-500 transition disabled:opacity-60"
-        title="退出登录"
+        className="camp-exit"
+        title="离开营地"
       >
-        <LogOut size={20} />
-        <span className="hidden lg:inline">{loggingOut ? '退出中...' : '退出'}</span>
+        <span className="camp-icon">🚪</span>
+        <span className="camp-label">{loggingOut ? '收拾中…' : '离营'}</span>
       </button>
 
-      {/* 底部装饰 */}
-      <div className="hidden lg:block text-xs text-haven-muted text-center py-2">
-        个人工作台 v0.2
-      </div>
+      <div className="camp-version">避风港 v0.2</div>
     </aside>
   );
 }

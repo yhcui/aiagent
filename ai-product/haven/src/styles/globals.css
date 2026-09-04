@@ -446,3 +446,567 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--haven-text);
 }
+
+/* ============================================================
+   想法页 · 露营手账风（延续登录页夜空小屋调性）
+   ============================================================ */
+.ideas-page {
+  --camp-bg-1: #1a1b3a;
+  --camp-bg-2: #2d2b5e;
+  --camp-bg-3: #3d2f5a;
+  --paper: #f4e4c1;
+  --paper-pink: #f4c6c0;
+  --paper-mint: #c8e6c9;
+  --paper-blue: #b3d4e6;
+  --paper-yellow: #fff4c4;
+  --ink: #4a3520;
+  --ink-soft: #7a5c3a;
+  --pin: #c0392b;
+  --pin-shadow: rgba(0,0,0,0.25);
+  --fire: #ff9d4a;
+  --fire-glow: rgba(255, 157, 74, 0.4);
+  --grass-dark: #2a4a3a;
+}
+
+.ideas-page {
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--camp-bg-1) 0%, var(--camp-bg-2) 50%, var(--camp-bg-3) 100%);
+  overflow: hidden;
+  font-family: "Nunito", sans-serif;
+  color: var(--paper);
+}
+
+/* 背景星星（稀疏） */
+.ideas-star {
+  position: absolute;
+  background: rgba(255,255,255,0.6);
+  border-radius: 50%;
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+/* 顶部篝火光晕 */
+.ideas-fire-glow {
+  position: absolute;
+  bottom: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  height: 250px;
+  background: radial-gradient(ellipse at center bottom, var(--fire-glow) 0%, transparent 70%);
+  pointer-events: none;
+  animation: fire-flicker 2.5s ease-in-out infinite alternate;
+}
+@keyframes fire-flicker {
+  0% { opacity: 0.7; transform: translateX(-50%) scaleY(1); }
+  100% { opacity: 1; transform: translateX(-48%) scaleY(1.06); }
+}
+
+/* 手账纸条容器 */
+.ideas-board {
+  position: relative;
+  z-index: 5;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 24px 120px;
+}
+
+/* 标题 */
+.ideas-title {
+  font-family: "Fredoka", sans-serif;
+  font-weight: 700;
+  font-size: 38px;
+  color: var(--paper-yellow);
+  text-shadow: 0 3px 12px rgba(0,0,0,0.5), 0 0 30px rgba(255, 217, 122, 0.2);
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ideas-title .flame {
+  display: inline-block;
+  animation: flame-dance 1.2s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 8px var(--fire-glow));
+}
+@keyframes flame-dance {
+  0% { transform: rotate(-4deg) scaleY(1); }
+  100% { transform: rotate(4deg) scaleY(1.1); }
+}
+.ideas-subtitle {
+  color: rgba(244, 228, 193, 0.6);
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 4px;
+  margin-bottom: 32px;
+}
+
+/* 输入框 — 像一本翻开的日记本 */
+.ideas-input-wrap {
+  position: relative;
+  margin-bottom: 36px;
+}
+.ideas-input {
+  background: var(--paper);
+  border: none;
+  border-radius: 4px 18px 6px 20px;
+  padding: 18px 60px 18px 22px;
+  width: 100%;
+  font-family: "Nunito", sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35), inset 0 0 30px rgba(0,0,0,0.04);
+  outline: none;
+  transform: rotate(-0.5deg);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.ideas-input::placeholder { color: var(--ink-soft); opacity: 0.6; }
+.ideas-input:focus {
+  transform: rotate(0deg) scale(1.01);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4), 0 0 0 3px var(--fire-glow), inset 0 0 30px rgba(0,0,0,0.04);
+}
+/* 输入框横线 */
+.ideas-input-lines {
+  position: absolute;
+  top: 18px;
+  bottom: 18px;
+  left: 0;
+  right: 60px;
+  pointer-events: none;
+  background-image: linear-gradient(transparent calc(100% - 1px), rgba(122, 92, 58, 0.15) 1px);
+  background-size: 100% 30px;
+  border-radius: 4px 18px 6px 20px;
+}
+.ideas-submit {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%) rotate(2deg);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(180deg, var(--fire), #d97a2a);
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #9a4f18, 0 6px 14px rgba(0,0,0,0.4);
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ideas-submit:hover:not(:disabled) {
+  transform: translateY(-50%) rotate(2deg) scale(1.08);
+}
+.ideas-submit:active:not(:disabled) {
+  transform: translateY(-48%) rotate(2deg);
+  box-shadow: 0 2px 0 #9a4f18;
+}
+.ideas-submit:disabled { opacity: 0.5; cursor: default; }
+
+/* 空状态 */
+.ideas-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: rgba(244, 228, 193, 0.5);
+}
+.ideas-empty .lantern {
+  font-size: 48px;
+  display: inline-block;
+  animation: lantern-sway 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 16px var(--fire-glow));
+}
+@keyframes lantern-sway {
+  0%, 100% { transform: rotate(-6deg); }
+  50% { transform: rotate(6deg); }
+}
+
+/* 想法便签 */
+.idea-note {
+  position: relative;
+  padding: 20px 22px 18px;
+  margin-bottom: 18px;
+  border-radius: 3px 4px 4px 6px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35), 2px 4px 8px rgba(0,0,0,0.15);
+  transition: transform 0.25s, box-shadow 0.25s;
+  font-family: "Nunito", sans-serif;
+}
+.idea-note:hover {
+  transform: rotate(0deg) translateY(-3px) scale(1.01);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.45), 4px 6px 12px rgba(0,0,0,0.2);
+}
+/* 便签图钉 */
+.idea-pin {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 16px;
+  background: radial-gradient(circle at 35% 35%, #ff6b6b, var(--pin));
+  border-radius: 50%;
+  box-shadow: 0 2px 4px var(--pin-shadow), inset -2px -2px 3px rgba(0,0,0,0.3);
+  z-index: 3;
+}
+.idea-pin::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 5px;
+  height: 5px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 50%;
+}
+
+/* 便签颜色变体 */
+.idea-note.c0 { background: var(--paper); }
+.idea-note.c1 { background: var(--paper-pink); }
+.idea-note.c2 { background: var(--paper-mint); }
+.idea-note.c3 { background: var(--paper-blue); }
+.idea-note.c4 { background: var(--paper-yellow); }
+
+/* 已完成 — 烧焦卷边效果 */
+.idea-note.done {
+  opacity: 0.55;
+}
+.idea-note.done::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, transparent 48%, rgba(0,0,0,0.12) 50%, transparent 52%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.idea-note.done .idea-text {
+  text-decoration: line-through;
+  text-decoration-color: var(--ink-soft);
+  text-decoration-thickness: 2px;
+  color: var(--ink-soft);
+}
+
+.idea-text {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--ink);
+  word-break: break-word;
+  padding-right: 4px;
+}
+
+/* 便签底部操作栏 */
+.idea-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(74, 53, 32, 0.2);
+}
+.idea-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: "Nunito", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink-soft);
+  transition: color 0.2s;
+}
+.idea-check:hover { color: var(--grass-dark); }
+.idea-check.done { color: var(--grass-dark); }
+.idea-check-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid var(--ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.idea-check.done .idea-check-box {
+  background: var(--grass-dark);
+  border-color: var(--grass-dark);
+  color: white;
+}
+.idea-delete {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink-soft);
+  opacity: 0;
+  transition: all 0.2s;
+  padding: 4px 6px;
+  font-size: 14px;
+  border-radius: 6px;
+}
+.idea-note:hover .idea-delete { opacity: 0.7; }
+.idea-delete:hover { opacity: 1; color: #c0392b; background: rgba(192,57,43,0.1); }
+
+/* 日期戳 */
+.idea-date {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  opacity: 0.6;
+  font-family: "Fredoka", monospace;
+}
+
+/* ============================================================
+   侧边栏 · 营地路标牌（延续夜空小屋 / 营火调性）
+   ============================================================ */
+.sidebar-camp {
+  --lamp: #ffd97a;
+  --fire: #ff9d4a;
+  --paper: #f4e4c1;
+  position: relative;
+  width: 76px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 10px 18px;
+  background: linear-gradient(180deg, #15162c 0%, #212046 55%, #2a2850 100%);
+  border-right: 1px solid rgba(255, 217, 122, 0.1);
+  overflow: hidden;
+  font-family: "Nunito", sans-serif;
+}
+
+/* 噪点纹理 */
+.sidebar-camp::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 4px 4px;
+  pointer-events: none;
+  z-index: 1;
+}
+/* 右侧篝火余晖竖线 */
+.sidebar-camp::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, transparent 5%, var(--fire) 45%, transparent 95%);
+  opacity: 0.4;
+  z-index: 1;
+}
+
+/* 顶部挂灯 */
+.camp-lantern {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.camp-lantern-rope {
+  width: 1px;
+  height: 20px;
+  background: linear-gradient(180deg, rgba(244, 228, 193, 0.05), rgba(244, 228, 193, 0.3));
+}
+.camp-lantern-bulb {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffffff, var(--lamp));
+  box-shadow: 0 0 12px 3px rgba(255, 217, 122, 0.5);
+  animation: lantern-glow 2.5s ease-in-out infinite alternate;
+}
+@keyframes lantern-glow {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* Logo */
+.camp-logo {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 6px 16px;
+  text-decoration: none;
+}
+.camp-logo-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #4a3520, #2e2013);
+  border: 2px solid rgba(255, 217, 122, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.08);
+  transition: transform 0.2s;
+}
+.camp-logo:hover .camp-logo-badge { transform: rotate(-6deg); }
+.camp-logo-text {
+  display: none;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 700;
+  font-size: 21px;
+  color: var(--lamp);
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 18px rgba(255, 217, 122, 0.35);
+}
+
+/* 导航 */
+.camp-nav {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  width: 100%;
+}
+/* 路径虚线 */
+.camp-nav::before {
+  display: none;
+  content: '';
+  position: absolute;
+  left: 31px;
+  top: 6px;
+  bottom: 6px;
+  border-left: 1px dashed rgba(244, 228, 193, 0.12);
+}
+
+.camp-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 9px 8px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: rgba(244, 228, 193, 0.5);
+  transition: all 0.2s;
+}
+.camp-nav-item:hover {
+  color: var(--paper);
+  background: rgba(255, 217, 122, 0.06);
+  transform: translateY(-1px);
+}
+.camp-nav-item.active {
+  color: var(--lamp);
+  background: linear-gradient(90deg, rgba(255, 157, 74, 0.16), rgba(255, 157, 74, 0.02));
+}
+/* 激活左侧营地灯带 */
+.camp-nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 22px;
+  background: var(--fire);
+  border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 10px 2px rgba(255, 157, 74, 0.55);
+}
+
+/* 图标方块（木牌） */
+.camp-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #3a2a1c, #241a10);
+  border: 1px solid rgba(255, 217, 122, 0.13);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.camp-nav-item:hover .camp-icon { transform: scale(1.06); }
+.camp-nav-item.active .camp-icon {
+  border-color: rgba(255, 157, 74, 0.45);
+  box-shadow: 0 0 14px rgba(255, 157, 74, 0.28), inset 0 0 8px rgba(255, 157, 74, 0.15);
+}
+
+.camp-label {
+  display: none;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+}
+
+/* 退出 */
+.camp-exit {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 9px 8px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  color: rgba(244, 228, 193, 0.4);
+  cursor: pointer;
+  font-family: "Nunito", sans-serif;
+  transition: all 0.2s;
+}
+.camp-exit::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  right: 12px;
+  border-top: 1px dashed rgba(244, 228, 193, 0.1);
+}
+.camp-exit:hover:not(:disabled) {
+  color: #ff8a7a;
+  background: rgba(192, 57, 43, 0.12);
+}
+.camp-exit:hover:not(:disabled) .camp-icon {
+  border-color: rgba(255, 138, 122, 0.4);
+  animation: exit-shake 0.4s ease-in-out;
+}
+.camp-exit:disabled { opacity: 0.5; cursor: default; }
+@keyframes exit-shake {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
+/* 版本号 */
+.camp-version {
+  position: relative;
+  z-index: 2;
+  margin-top: 12px;
+  text-align: center;
+  font-family: "Fredoka", sans-serif;
+  font-size: 11px;
+  color: rgba(244, 228, 193, 0.22);
+  letter-spacing: 0.5px;
+}
+
+/* 大屏展开文字 */
+@media (min-width: 1024px) {
+  .sidebar-camp { width: 240px; }
+  .camp-logo { justify-content: flex-start; padding-left: 10px; }
+  .camp-logo-text { display: inline; }
+  .camp-nav::before { display: block; }
+  .camp-nav-item { justify-content: flex-start; padding-left: 10px; }
+  .camp-label { display: inline; }
+  .camp-exit { justify-content: flex-start; padding-left: 10px; }
+}

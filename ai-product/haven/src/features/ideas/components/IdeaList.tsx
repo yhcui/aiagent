@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { AnimatePresence } from 'framer-motion';
-import { Lightbulb } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import IdeaInput from './IdeaInput';
 import IdeaItem from './IdeaItem';
 import { fetchIdeas } from '../api';
@@ -11,6 +10,14 @@ import type { Idea } from '@/lib/db';
 interface Props {
   initialIdeas: Idea[];
 }
+
+// 稀疏背景星星
+const STARS = Array.from({ length: 25 }, () => ({
+  top: Math.random() * 50,
+  left: Math.random() * 100,
+  size: Math.random() * 2 + 1,
+  delay: Math.random() * 4,
+}));
 
 export default function IdeaList({ initialIdeas }: Props) {
   const [ideas, setIdeas] = useState<Idea[]>(initialIdeas);
@@ -31,21 +38,45 @@ export default function IdeaList({ initialIdeas }: Props) {
   const isEmpty = ideas.length === 0;
 
   return (
-    <div className="space-y-3">
-      <IdeaInput onAdded={refresh} />
+    <div className="ideas-page">
+      {/* 星空 */}
+      {STARS.map((s, i) => (
+        <span
+          key={`s-${i}`}
+          className="ideas-star"
+          style={{ top: `${s.top}%`, left: `${s.left}%`, width: s.size, height: s.size, animationDelay: `${s.delay}s` }}
+        />
+      ))}
+      {/* 篝火光晕 */}
+      <div className="ideas-fire-glow" />
 
-      {isEmpty && (
-        <div className="text-center py-16">
-          <Lightbulb size={48} className="mx-auto mb-4 text-haven-primary opacity-50" />
-          <p className="text-haven-muted text-lg">记下第一个想法吧 ✨</p>
-        </div>
-      )}
+      <div className="ideas-board">
+        <h1 className="ideas-title">
+          <span className="flame">🔥</span>
+          灵感营火
+        </h1>
+        <p className="ideas-subtitle">围炉夜话，记下每一闪而过的念头</p>
 
-      <AnimatePresence>
-        {ideas.map((idea) => (
-          <IdeaItem key={idea.id} idea={idea} onChanged={refresh} />
-        ))}
-      </AnimatePresence>
+        <IdeaInput onAdded={refresh} />
+
+        {isEmpty ? (
+          <div className="ideas-empty">
+            <span className="lantern">🏮</span>
+            <p style={{ marginTop: 16, fontSize: 17, fontWeight: 600 }}>
+              夜空很静，还没人留下想法
+            </p>
+            <p style={{ marginTop: 4, fontSize: 13, opacity: 0.6 }}>
+              在上方写下第一个念头吧
+            </p>
+          </div>
+        ) : (
+          <AnimatePresence>
+            {ideas.map((idea, i) => (
+              <IdeaItem key={idea.id} idea={idea} index={i} onChanged={refresh} />
+            ))}
+          </AnimatePresence>
+        )}
+      </div>
     </div>
   );
 }
