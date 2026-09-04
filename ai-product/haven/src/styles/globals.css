@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -26,8 +28,408 @@ html {
 body {
   background-color: var(--haven-bg);
   color: var(--haven-text);
-  font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-family: "Nunito", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   min-height: 100vh;
+}
+
+/* 登录页专属：夜空小屋场景 */
+.login-scene {
+  --sky-1: #1a1b3a;
+  --sky-2: #2d2b5e;
+  --sky-3: #4a3d6b;
+  --house-wall: #e8d5b7;
+  --house-trim: #c9a878;
+  --roof: #b85c5c;
+  --roof-dark: #8f4444;
+  --door: #c4623d;
+  --door-dark: #9a4a2e;
+  --window-glow: #ffd97a;
+  --moon: #fff4d6;
+  --grass: #3d5a4a;
+  --knob: #f4d03f;
+}
+
+.login-scene {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 45%, var(--sky-3) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Nunito", sans-serif;
+}
+
+/* 星星 */
+.login-star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.4); }
+}
+
+/* 月亮 */
+.login-moon {
+  position: absolute;
+  top: 8%;
+  right: 12%;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffffff, var(--moon));
+  box-shadow: 0 0 40px 10px rgba(255, 244, 214, 0.4), inset -8px -8px 0 rgba(0,0,0,0.06);
+}
+.login-moon::before, .login-moon::after {
+  content: '';
+  position: absolute;
+  background: rgba(0,0,0,0.08);
+  border-radius: 50%;
+}
+.login-moon::before { width: 14px; height: 14px; top: 22px; left: 18px; }
+.login-moon::after { width: 8px; height: 8px; top: 40px; left: 40px; }
+
+/* 萤火虫 */
+.login-firefly {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #fff59d;
+  border-radius: 50%;
+  box-shadow: 0 0 8px 2px rgba(255, 245, 157, 0.8);
+  animation: float-firefly 8s ease-in-out infinite;
+}
+@keyframes float-firefly {
+  0%, 100% { transform: translate(0, 0); opacity: 0.4; }
+  25% { transform: translate(30px, -20px); opacity: 1; }
+  50% { transform: translate(-10px, -40px); opacity: 0.6; }
+  75% { transform: translate(20px, -25px); opacity: 1; }
+}
+
+/* 草地 */
+.login-grass {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 90px;
+  background: linear-gradient(180deg, transparent, var(--grass));
+}
+.login-grass::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: 16px;
+  background: radial-gradient(circle at 50% 100%, var(--grass) 4px, transparent 5px) repeat-x;
+  background-size: 24px 16px;
+}
+
+/* 小屋容器 */
+.login-house {
+  position: relative;
+  z-index: 5;
+  filter: drop-shadow(0 30px 40px rgba(0,0,0,0.45));
+  perspective: 1000px;
+}
+
+/* 屋顶 — 用 clip-path 画三角形，宽度和墙体一致 */
+.login-roof {
+  width: 260px;
+  height: 90px;
+  background: var(--roof);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  margin: 0 auto -1px;
+  position: relative;
+  filter: drop-shadow(0 -2px 0 var(--roof-dark));
+}
+/* 屋檐（底部加深条） */
+.login-roof::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: var(--roof-dark);
+}
+
+/* 烟囱 — 绝对定位到屋顶右侧，底部嵌入屋顶内部 */
+.login-chimney {
+  position: absolute;
+  top: 10px;
+  right: 36px;
+  width: 26px;
+  height: 60px;
+  background: var(--roof-dark);
+  border-radius: 4px 4px 0 0;
+  border: 2px solid #6b3030;
+  border-bottom: none;
+  z-index: 0;
+}
+.login-smoke {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.login-smoke span {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 50%;
+  animation: smoke-rise 4s ease-out infinite;
+}
+.login-smoke span:nth-child(2) { animation-delay: 1.3s; }
+.login-smoke span:nth-child(3) { animation-delay: 2.6s; }
+@keyframes smoke-rise {
+  0% { transform: translate(0, 0) scale(0.5); opacity: 0; }
+  20% { opacity: 0.6; }
+  100% { transform: translate(-30px, -90px) scale(1.8); opacity: 0; }
+}
+
+/* 墙体 */
+.login-wall {
+  width: 260px;
+  height: 70px;
+  background: var(--house-wall);
+  border: 4px solid var(--house-trim);
+  border-top: none;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 20px;
+}
+
+/* 窗户 */
+.login-window {
+  width: 50px;
+  height: 50px;
+  background: var(--window-glow);
+  border: 4px solid var(--house-trim);
+  border-radius: 8px;
+  position: relative;
+  box-shadow: 0 0 20px rgba(255, 217, 122, 0.6), inset 0 0 12px rgba(255, 200, 80, 0.5);
+  overflow: hidden;
+}
+.login-window::before, .login-window::after {
+  content: '';
+  position: absolute;
+  background: var(--house-trim);
+}
+.login-window::before { width: 3px; height: 100%; left: 50%; transform: translateX(-50%); }
+.login-window::after { width: 100%; height: 3px; top: 50%; transform: translateY(-50%); }
+
+/* 窗户里探头的小猫 */
+.login-cat {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 20px;
+  background: #3d3d3d;
+  border-radius: 12px 12px 4px 4px;
+  z-index: 2;
+}
+.login-cat::before, .login-cat::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 8px solid #3d3d3d;
+}
+.login-cat::before { left: 3px; }
+.login-cat::after { right: 3px; }
+.login-cat-eye {
+  position: absolute;
+  top: 5px;
+  width: 4px;
+  height: 4px;
+  background: var(--window-glow);
+  border-radius: 50%;
+  animation: cat-blink 4s infinite;
+}
+.login-cat-eye.left { left: 5px; }
+.login-cat-eye.right { right: 5px; }
+@keyframes cat-blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  93%, 96% { transform: scaleY(0.1); }
+}
+
+/* 门 = 登录表单 */
+.login-door-wrap {
+  transform-origin: left center;
+  transform-style: preserve-3d;
+}
+.login-door {
+  width: 260px;
+  background: linear-gradient(180deg, var(--door) 0%, var(--door-dark) 100%);
+  border: 4px solid var(--door-dark);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 24px 26px 22px;
+  position: relative;
+  box-shadow: inset 0 4px 0 rgba(255,255,255,0.15);
+}
+/* 门板纹路 */
+.login-door::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  border: 2px solid rgba(0,0,0,0.18);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+/* 门把手 */
+.login-knob {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  background: radial-gradient(circle at 35% 35%, #fff09a, var(--knob));
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  transform: translateY(-50%);
+  transition: transform 0.3s;
+  z-index: 10;
+}
+.login-door:hover .login-knob {
+  animation: knob-wiggle 0.6s ease-in-out;
+}
+@keyframes knob-wiggle {
+  0%, 100% { transform: translateY(-50%) rotate(0); }
+  25% { transform: translateY(-50%) rotate(15deg); }
+  75% { transform: translateY(-50%) rotate(-15deg); }
+}
+
+/* 抖动（密码错误） */
+.login-shake {
+  animation: house-shake 0.5s ease-in-out;
+}
+@keyframes house-shake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  20% { transform: translateX(-8px) rotate(-1deg); }
+  40% { transform: translateX(8px) rotate(1deg); }
+  60% { transform: translateX(-6px) rotate(-0.5deg); }
+  80% { transform: translateX(6px) rotate(0.5deg); }
+}
+
+/* 门牌 */
+.login-sign {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-3deg);
+  background: #f4e4c1;
+  color: #6b4a2e;
+  padding: 3px 14px;
+  border-radius: 4px;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  border: 2px solid #c9a878;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  white-space: nowrap;
+  z-index: 6;
+}
+
+/* 表单元素 */
+.login-door h1 {
+  font-family: "Fredoka", sans-serif;
+  font-weight: 700;
+  font-size: 32px;
+  color: #fff4d6;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  letter-spacing: 1px;
+  text-align: center;
+  margin-bottom: 2px;
+}
+.login-door .tagline {
+  text-align: center;
+  color: rgba(255, 244, 214, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+.login-door label {
+  display: block;
+  color: rgba(255, 244, 214, 0.8);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.login-door input {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 2px solid rgba(0,0,0,0.2);
+  background: rgba(255, 244, 214, 0.95);
+  color: #3d2a1a;
+  font-family: "Nunito", sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.25s;
+}
+.login-door input::placeholder { color: #b0987a; }
+.login-door input:focus {
+  border-color: var(--window-glow);
+  box-shadow: 0 0 0 4px rgba(255, 217, 122, 0.25);
+  background: #fff;
+}
+.login-door button {
+  width: 100%;
+  margin-top: 18px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(180deg, #ffd97a, #f4b942);
+  color: #5c3d10;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #c98f2a, 0 6px 12px rgba(0,0,0,0.3);
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.login-door button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #c98f2a, 0 8px 16px rgba(0,0,0,0.35);
+}
+.login-door button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #c98f2a;
+}
+.login-error {
+  color: #ffd6d6;
+  background: rgba(180, 40, 40, 0.45);
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 14px;
+  border: 1px solid rgba(255,150,150,0.3);
 }
 
 /* 滚动条美化 */
