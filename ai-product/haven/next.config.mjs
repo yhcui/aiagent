@@ -1,5 +1,4 @@
 const nextConfig = {
-  output: 'standalone',          // ← 加这行
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
