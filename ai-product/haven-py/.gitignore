@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# 数据与凭证（不提交）
+data/*.db
+data/*.db-wal
+data/*.db-shm
+.env
+.env.local
+
+# 其他
+.DS_Store
+*.log
