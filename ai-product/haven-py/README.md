@@ -14,7 +14,9 @@ haven-py/
 │   │   ├── deps.py          # 登录校验依赖
 │   │   └── routers/
 │   │       ├── auth.py      # 登录 / 登出
-│   │       └── ideas.py     # 想法增删改查
+│   │       ├── ideas.py     # 想法增删改查
+│   │       └── detect.py    # AI 文本检测（代理腾讯朱雀）
+│   ├── .env.example         # 配置模板，复制为 .env 后填写
 │   ├── requirements.txt
 │   └── data/haven.db        # 数据库（首次启动自动创建）
 │
@@ -27,7 +29,7 @@ haven-py/
     │   │   ├── layout/Sidebar.tsx
     │   │   └── ProtectedRoute.tsx   # 路由守卫
     │   ├── features/ideas/  # 想法模块组件
-    │   ├── pages/           # 登录页 / 想法页
+    │   ├── pages/           # 登录页 / 想法页 / AI 检测页
     │   └── styles/globals.css       # 全量样式（原样迁移）
     └── vite.config.ts       # 含 /api 开发代理
 ```
@@ -35,6 +37,21 @@ haven-py/
 ---
 
 ## 本地开发
+
+> **快速启动**（依赖已装好、`.env` 已配好的日常场景）：
+>
+> ```powershell
+> # 终端 1 · 后端
+> cd backend
+> .\.venv\Scripts\activate
+> uvicorn app.main:app --reload --port 8000
+>
+> # 终端 2 · 前端（新开终端）
+> cd frontend
+> npm run dev
+> ```
+>
+> 访问 **http://localhost:5173**，账号 `Y` / `1`。
 
 ### 一、启动后端
 
@@ -47,6 +64,10 @@ python -m venv .venv
 .\.venv\Scripts\activate
 
 pip install -r requirements.txt
+
+# 首次运行：生成配置文件（已有则跳过）
+copy .env.example .env
+
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -54,6 +75,8 @@ uvicorn app.main:app --reload --port 8000
 > ```powershell
 > Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 > ```
+
+配置（含登录凭证、朱雀 API Key）在启动时自动从 `backend/.env` 读取，**修改 .env 后需重启后端生效**。
 
 #### Linux / macOS
 
@@ -64,6 +87,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 pip install -r requirements.txt
+
+# 首次运行：生成配置文件（已有则跳过）
+cp .env.example .env
+
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -94,6 +121,12 @@ npm run dev
 
 > 前端 `/api` 请求已通过 Vite 代理转发到后端 8000 端口，无需手动配 CORS。
 
+生产构建（产物在 `frontend/dist/`）：
+
+```bash
+npm run build
+```
+
 ---
 
 ## 接口一览
@@ -106,11 +139,21 @@ npm run dev
 | POST | `/api/ideas` | 新建想法 | 是 |
 | PATCH | `/api/ideas/{id}` | 切换完成状态 | 是 |
 | DELETE | `/api/ideas/{id}` | 删除想法 | 是 |
+| POST | `/api/detect` | AI 文本检测（腾讯朱雀），入参 `text`(≤5000 字符)/`is_merge` | 是 |
 | GET | `/api/health` | 健康检查 | 否 |
 
 ---
 
 ## 环境变量
+
+后端启动时自动加载 **`backend/.env`**（不存在则忽略）。复制示例文件即可生成：
+
+```bash
+cd backend
+cp .env.example .env   # Windows: copy .env.example .env
+```
+
+> `.env` 已被 `.gitignore` 忽略，真实凭证不要提交；`.env` 之外设置的真实环境变量优先级更高。
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
@@ -120,10 +163,11 @@ npm run dev
 | `DB_DIR` | `backend/data` | 数据库目录 |
 | `ALLOWED_ORIGINS` | `http://localhost:5173` | 允许的前端来源，多个用逗号分隔 |
 | `COOKIE_SECURE` | `false` | HTTPS 部署时设为 `true` |
+| `ZHUQUE_API_KEY` | 无 | 朱雀 AI 检测的 EdgeOne Makers API Key，不配置则检测接口返回 503 |
 
 > ⚠️ 不设置凭证则任何人可用默认的 `Y` / `1` 登录，生产环境务必修改。
 
-Windows 临时设置（PowerShell）：
+Windows 临时设置（PowerShell，优先级高于 .env）：
 
 ```powershell
 $env:AUTH_USERNAME="admin"

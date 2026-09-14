@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import IdeasPage from './pages/IdeasPage';
+import DetectPage from './pages/DetectPage';
 import Sidebar from './components/layout/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -17,6 +18,20 @@ export default function App() {
               <Sidebar />
               <main className="app-main">
                 <IdeasPage />
+              </main>
+            </div>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/detect"
+        element={
+          <ProtectedRoute>
+            <div className="app-shell">
+              <Sidebar />
+              <main className="app-main">
+                <DetectPage />
               </main>
             </div>
           </ProtectedRoute>

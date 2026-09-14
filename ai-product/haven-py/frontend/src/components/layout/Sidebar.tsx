@@ -4,6 +4,7 @@ import { logout } from '../../api/auth';
 
 const navItems = [
   { href: '/ideas', label: '想法', icon: '🔥' },
+  { href: '/detect', label: 'AI检测', icon: '🔍' },
 ];
 
 export default function Sidebar() {
