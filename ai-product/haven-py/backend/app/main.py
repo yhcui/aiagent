@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .database import init_db
 from .routers import auth as auth_router
+from .routers import detect as detect_router
 from .routers import ideas as ideas_router
 
 app = FastAPI(title="Haven API", description="个人工作台后端", version="1.0.0")
@@ -23,6 +24,7 @@ app.add_middleware(
 
 app.include_router(auth_router.router)
 app.include_router(ideas_router.router)
+app.include_router(detect_router.router)
 
 
 @app.on_event("startup")
