@@ -41,8 +41,7 @@ def storage_service(mock_config):
     service.init_db()
     yield service
     # 清理
-    if service._conn:
-        service._conn.close()
+    service.close()
     mock_config.cleanup()
 
 

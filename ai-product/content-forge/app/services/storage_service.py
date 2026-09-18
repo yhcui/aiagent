@@ -2,6 +2,7 @@
 import json
 import sqlite3
 import threading
+from datetime import datetime
 from pathlib import Path
 from loguru import logger
 from app.models.task import Task
@@ -18,10 +19,22 @@ class StorageService:
         """获取当前线程的数据库连接（线程安全）"""
         conn = getattr(self._local, 'conn', None)
         if conn is None:
-            conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+            conn = sqlite3.connect(str(self.db_path), check_same_thread=False, timeout=30)
             conn.row_factory = sqlite3.Row
+            # 多线程读写时避免 "database is locked" 立即失败
+            conn.execute("PRAGMA busy_timeout = 30000")
             self._local.conn = conn
         return conn
+
+    def close(self):
+        """关闭当前线程的数据库连接"""
+        conn = getattr(self._local, 'conn', None)
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception as e:
+                logger.warning(f"关闭数据库连接失败：{e}")
+            self._local.conn = None
 
     def init_db(self):
         conn = self._get_conn()
@@ -55,8 +68,21 @@ class StorageService:
             );
         """)
         conn.commit()
+        self._migrate_db()
         self._init_builtin_channels()
         logger.info(f"数据库初始化完成：{self.db_path}")
+
+    def _migrate_db(self):
+        """数据库升级迁移：当旧表缺少新字段时自动补全"""
+        conn = self._get_conn()
+        try:
+            columns = [row[1] for row in conn.execute("PRAGMA table_info(tasks)").fetchall()]
+            if "image_paths" not in columns:
+                conn.execute("ALTER TABLE tasks ADD COLUMN image_paths TEXT DEFAULT '[]'")
+                conn.commit()
+                logger.info("已迁移数据库：tasks 表新增 image_paths 列")
+        except Exception as e:
+            logger.warning(f"数据库迁移失败：{e}")
 
     def _init_builtin_channels(self):
         """初始化内置渠道"""
@@ -135,13 +161,8 @@ class StorageService:
         conn.commit()
 
     def update_task(self, task: Task):
-        task.updated_at = __import__("datetime").datetime.now()
+        task.updated_at = datetime.now()
         self.save_task(task)
-
-    def delete_task(self, task_id: str):
-        conn = self._get_conn()
-        conn.execute("DELETE FROM tasks WHERE id=?", (task_id,))
-        conn.commit()
 
     # ===== 渠道 CRUD =====
     def get_all_channels(self, active_only: bool = False) -> list[Channel]:

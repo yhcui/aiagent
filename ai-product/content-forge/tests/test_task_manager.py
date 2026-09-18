@@ -90,26 +90,26 @@ class TestTaskProcessing:
 
 
 class TestTaskManagerCallbacks:
-    """回调测试"""
+    """信号通知测试（TaskManager 使用 pyqtSignal 跨线程通知）"""
 
-    def test_add_listener(self, task_manager):
-        """添加监听器"""
+    def test_connect_signal(self, task_manager):
+        """连接 task_updated 信号"""
+
+        def on_task_updated(task):
+            pass
+
+        task_manager.task_updated.connect(on_task_updated)
+        # 不断言内部实现，只验证连接不抛异常
+
+    def test_signal_emitted_on_add(self, task_manager):
+        """添加任务时发出 task_updated 信号（同线程直连，同步触发）"""
         callback_result = []
 
         def on_task_updated(task):
-            callback_result.append(task.id)
+            if task is not None:
+                callback_result.append((task.id, task.status))
 
-        task_manager.add_listener(on_task_updated)
-        assert len(task_manager._listeners) == 1
-
-    def test_notify_listeners(self, task_manager):
-        """通知监听器"""
-        callback_result = []
-
-        def on_task_updated(task):
-            callback_result.append((task.id, task.status))
-
-        task_manager.add_listener(on_task_updated)
+        task_manager.task_updated.connect(on_task_updated)
 
         task = task_manager.add_task(url="https://example.com", opinion="测试")
         assert len(callback_result) >= 1

@@ -150,6 +150,7 @@ class TaskManager(QObject):
                 user_opinion=task.user_opinion,
                 original_content=task.original_content,
                 export_dir=export_dir,
+                channel=task.channel,
             )
             
             # 保存图片路径信息
@@ -237,7 +238,6 @@ class TaskManager(QObject):
             logger.info(f"已删除导出目录：{export_dir}")
         
         logger.info("已清除所有任务及导出文件")
-        logger.info("已取消所有待处理任务")
 
     def regenerate(self, task_id: str):
         """重新生成单个任务"""

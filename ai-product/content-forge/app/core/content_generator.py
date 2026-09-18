@@ -64,19 +64,19 @@ class ContentGenerator:
             raise ValueError(f"AI 返回格式错误：{e}。请检查 API 配置是否正确。")
         except Exception as e:
             error_msg = str(e)
-            # 检测常见的 API 配置错误
+            # 检测常见的 API 配置错误，保留原始错误信息
             if "<!DOCTYPE" in error_msg or "<html" in error_msg.lower():
-                raise ValueError("API 返回了网页内容而非有效响应，请检查 API 地址和 Key 是否正确配置。")
+                raise ValueError(f"API 返回了网页内容而非有效响应，请检查 API 地址和 Key 是否正确配置。\n原始错误：{error_msg[:200]}")
             if "401" in error_msg or "403" in error_msg:
-                raise ValueError("API 认证失败，请检查 API Key 是否正确。")
+                raise ValueError(f"API 认证失败，请检查 API Key 是否正确。\n原始错误：{error_msg[:200]}")
             if "404" in error_msg:
-                raise ValueError("API 地址无效，请检查 base_url 配置。")
+                raise ValueError(f"API 地址无效，请检查 base_url 配置。\n原始错误：{error_msg[:200]}")
             if "timeout" in error_msg.lower():
-                raise ValueError("API 请求超时，请检查网络连接或稍后重试。")
+                raise ValueError(f"API 请求超时，请检查网络连接或稍后重试。\n原始错误：{error_msg[:200]}")
             logger.error(f"生成观点失败：{e}")
             raise ValueError(f"AI 生成失败：{e}")
 
-    def generate_article(self, system_prompt: str, user_opinion: str, original_content: str) -> str:
+    def generate_article(self, system_prompt: str, user_opinion: str, original_content: str, channel: str = "wechat") -> str:
         """
         基于系统提示词 + 用户观点 + 原文，生成新图文
         """
@@ -88,7 +88,7 @@ class ContentGenerator:
 """
 
         try:
-            service = self._get_ai_service("wechat")
+            service = self._get_ai_service(channel)
             result = service.generate(system_prompt, user_prompt)
             logger.info(f"图文生成成功，长度 {len(result)} 字")
             return result
@@ -105,17 +105,17 @@ class ContentGenerator:
             logger.error(f"连接测试失败：{e}")
             return False
 
-    def generate_article_with_images(self, system_prompt: str, user_opinion: str, original_content: str, export_dir: Path = None) -> tuple[str, list[Path]]:
+    def generate_article_with_images(self, system_prompt: str, user_opinion: str, original_content: str, export_dir: Path = None, channel: str = "wechat") -> tuple[str, list[Path]]:
         """
         生成文章并附带两张相关图片
         返回 (文章内容, [图片1路径, 图片2路径])
-        
+
         图片插入规则：
         - 第一张：若第一段>100字插在第一段后，否则找100字位置
         - 第二张：插在倒数第三段左右，若该段<100字则找100字位置
         """
         # 1. 先生成文章
-        article = self.generate_article(system_prompt, user_opinion, original_content)
+        article = self.generate_article(system_prompt, user_opinion, original_content, channel)
         
         image_paths = []
         

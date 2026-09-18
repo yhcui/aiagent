@@ -33,7 +33,16 @@ def main():
     app.setApplicationVersion("0.1.0")
 
     win = MainWindow(config, storage)
+    # 确保窗口显示在主显示器上并最大化
+    from PyQt6.QtGui import QScreen
+    primary_screen = QApplication.primaryScreen()
+    if primary_screen:
+        screen_geometry = primary_screen.availableGeometry()
+        win.move(screen_geometry.x(), screen_geometry.y())
+        win.resize(screen_geometry.width() - 100, screen_geometry.height() - 100)
     win.show()
+    win.raise_()
+    win.activateWindow()
 
     logger.info("主窗口已显示")
     sys.exit(app.exec())

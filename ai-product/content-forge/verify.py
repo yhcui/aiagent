@@ -1,7 +1,11 @@
-"""自验证脚本：测试 ContentForge 核心功能"""
+"""自验证脚本：测试 ContentForge 核心功能
+
+使用独立的临时配置与钥匙串命名空间，绝不污染生产配置。
+"""
 import os, sys, tempfile
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 
+from pathlib import Path
 from app.utils.config import AppConfig
 from app.services.storage_service import StorageService
 from app.core.channel_manager import ChannelManager
@@ -9,16 +13,35 @@ from app.core.task_manager import TaskManager
 from app.core.content_fetcher import ContentFetcher
 from app.models.task import TaskStatus
 
-def test():
-    errors = []
+TEST_KEYRING_SERVICE = "ContentForge-Verify"
 
-    # 1. 配置初始化
+
+def cleanup_test_keys():
+    """清理验证脚本写入钥匙串的测试 Key"""
     try:
-        config = AppConfig()
+        import keyring
+        for ability, channel in [("text", None), ("text", "toutiao")]:
+            key = f"{ability}:{channel or 'default'}"
+            try:
+                keyring.delete_password(TEST_KEYRING_SERVICE, key)
+            except Exception:
+                pass
+    except ImportError:
+        pass
+
+
+def test(tmp_dir: Path):
+    errors = []
+    config_file = tmp_dir / "config.json"
+
+    # 1. 配置初始化（隔离的临时配置）
+    try:
+        config = AppConfig(config_file=config_file, keyring_service=TEST_KEYRING_SERVICE)
         assert config.data_dir.exists(), "数据目录未创建"
-        print("  [OK] AppConfig 初始化")
+        print("  [OK] AppConfig 初始化（临时隔离配置）")
     except Exception as e:
         errors.append(f"AppConfig: {e}")
+        return errors  # 配置挂了后面没法跑
 
     # 2. 数据库初始化
     try:
@@ -28,6 +51,7 @@ def test():
         print("  [OK] StorageService 数据库初始化")
     except Exception as e:
         errors.append(f"StorageService: {e}")
+        return errors
 
     # 3. 内置渠道注册
     try:
@@ -62,7 +86,7 @@ def test():
     except Exception as e:
         errors.append(f"ContentFetcher: {e}")
 
-    # 6. API 配置读写
+    # 6. API 配置读写（Key 进钥匙串，config.json 不留明文）
     try:
         config.set_api_config("text", {
             "base_url": "https://api.test.com/v1",
@@ -71,7 +95,11 @@ def test():
         })
         cfg = config.get_api_config("text")
         assert cfg["api_key"] == "sk-test123", "API Key 读取不正确"
-        print("  [OK] API 配置读写正常")
+        # 确认 config.json 中不存明文 key
+        import json
+        raw = json.loads(config_file.read_text(encoding="utf-8"))
+        assert raw["api_config"]["text"]["default"].get("api_key", "") == "", "config.json 中仍存明文 API Key！"
+        print("  [OK] API 配置读写正常（Key 存钥匙串，文件无明文）")
     except Exception as e:
         errors.append(f"API Config: {e}")
 
@@ -84,7 +112,7 @@ def test():
         ]
         tasks = tm.add_tasks(items)
         assert len(tasks) == 3, f"批量添加失败，期望3个实际{len(tasks)}"
-        for t in tm.tasks:
+        for t in list(tm.tasks):
             tm.remove_task(t.id)
         print("  [OK] 批量添加任务（同一链接×不同观点）正常")
     except Exception as e:
@@ -98,6 +126,7 @@ def test():
         toutiao_cfg = config.get_api_config("text", channel="toutiao")
         assert global_cfg["base_url"] == "https://global.com/v1", "全局配置读取错误"
         assert toutiao_cfg["base_url"] == "https://toutiao.com/v1", "渠道覆盖配置读取错误"
+        assert toutiao_cfg["api_key"] == "sk-toutiao", "渠道覆盖 Key 读取错误"
         print("  [OK] API 配置全局 + 渠道覆盖两级正常")
     except Exception as e:
         errors.append(f"Override config: {e}")
@@ -110,29 +139,39 @@ def test():
     except Exception as e:
         errors.append(f"UI import: {e}")
 
-    # 结果
+    # 关闭数据库连接，避免临时目录清理失败（Windows 文件占用）
+    try:
+        storage.close()
+    except Exception:
+        pass
+
+    return errors
+
+
+if __name__ == "__main__":
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+
+    with tempfile.TemporaryDirectory(prefix="contentforge_verify_") as tmp:
+        errors = test(Path(tmp))
+    cleanup_test_keys()
+
     print()
     if errors:
         print(f"❌ 验证失败，共 {len(errors)} 个错误：")
         for err in errors:
             print(f"   - {err}")
-        return False
+        sys.exit(1)
     else:
         print("✅ 自验证全部通过！所有核心功能正常。")
         print()
         print("验证清单：")
-        print("  ✓ 配置系统")
+        print("  ✓ 配置系统（隔离临时配置，未污染生产）")
         print("  ✓ SQLite 数据库 + 内置渠道初始化")
         print("  ✓ 任务增删改查")
         print("  ✓ 批量任务（多观点场景）")
         print("  ✓ URL 校验")
-        print("  ✓ API 配置（全局 + 渠道覆盖）")
+        print("  ✓ API 配置（全局 + 渠道覆盖，Key 存钥匙串）")
         print("  ✓ UI 模块导入")
-        return True
-
-if __name__ == "__main__":
-    import io, sys
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
-    ok = test()
-    sys.exit(0 if ok else 1)
+        sys.exit(0)

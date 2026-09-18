@@ -3,22 +3,92 @@ import json
 import pathlib
 from pathlib import Path
 
+from loguru import logger
+
+try:
+    import keyring
+    _KEYRING_AVAILABLE = True
+except ImportError:  # pragma: no cover - keyring 未安装时退化为明文存储
+    _KEYRING_AVAILABLE = False
+
+_KEYRING_SERVICE = "ContentForge"
+
 
 class AppConfig:
     """应用全局配置"""
 
-    def __init__(self):
+    def __init__(self, config_file: "str | Path" = None, keyring_service: str = _KEYRING_SERVICE):
+        """
+        Args:
+            config_file: 自定义配置文件路径（测试/验证脚本用，默认 app/data/config.json）
+            keyring_service: 钥匙串服务命名空间（测试应使用独立命名空间避免污染）
+        """
         self.base_dir = Path(__file__).parent.parent
-        self._data_dir = self.base_dir / "data"
+        self._keyring_service = keyring_service
+        if config_file:
+            self.config_file = Path(config_file)
+            self._data_dir = self.config_file.parent
+        else:
+            self._data_dir = self.base_dir / "data"
+            self.config_file = self._data_dir / "config.json"
         self._data_dir.mkdir(parents=True, exist_ok=True)
         self._data = {}  # 初始化，供 data_dir 属性读取
-        self.config_file = self._data_dir / "config.json"
         self._load()
         # 加载完成后同步用户配置的 data_dir
         configured = self._data.get("data_dir")
         if configured:
             self._data_dir = Path(configured)
             self._data_dir.mkdir(parents=True, exist_ok=True)
+        # 将 config.json 中残留的明文 API Key 迁移到系统钥匙串
+        self._migrate_plaintext_keys()
+
+    # ==================== API Key 安全存储（keyring） ====================
+
+    @staticmethod
+    def _keyring_key(ability: str, channel: str = None) -> str:
+        return f"{ability}:{channel or 'default'}"
+
+    def _get_api_key(self, ability: str, channel: str = None) -> str:
+        if not _KEYRING_AVAILABLE:
+            return ""
+        try:
+            return keyring.get_password(self._keyring_service, self._keyring_key(ability, channel)) or ""
+        except Exception as e:  # pragma: no cover - 系统钥匙串异常时降级
+            logger.warning(f"读取钥匙串失败（{ability}/{channel}）：{e}")
+            return ""
+
+    def _set_api_key(self, ability: str, channel: str = None, api_key: str = ""):
+        if not _KEYRING_AVAILABLE:
+            return
+        try:
+            if api_key:
+                keyring.set_password(self._keyring_service, self._keyring_key(ability, channel), api_key)
+            else:
+                # 空 key 视为删除
+                keyring.delete_password(self._keyring_service, self._keyring_key(ability, channel))
+        except keyring.errors.PasswordDeleteError:
+            pass
+        except Exception as e:  # pragma: no cover
+            logger.warning(f"写入钥匙串失败（{ability}/{channel}）：{e}")
+
+    def _migrate_plaintext_keys(self):
+        """把 config.json 里残留的明文 api_key 迁入钥匙串并从文件中抹除"""
+        ac = self._data.get("api_config", {})
+        dirty = False
+        for ability, cfg in ac.items():
+            default = cfg.get("default", {})
+            if default.get("api_key"):
+                self._set_api_key(ability, None, default["api_key"])
+                default["api_key"] = ""
+                dirty = True
+            for channel, override in cfg.get("overrides", {}).items():
+                if override.get("api_key"):
+                    self._set_api_key(ability, channel, override["api_key"])
+                    override["api_key"] = ""
+                    dirty = True
+        if dirty:
+            self._save()
+            logger.info("已将 config.json 中的明文 API Key 迁移到系统钥匙串")
 
     @property
     def data_dir(self) -> Path:
@@ -84,16 +154,27 @@ class AppConfig:
         self._save()
 
     def get_api_config(self, ability: str, channel: str = None):
-        """获取 API 配置（能力 + 可选渠道覆盖）"""
+        """获取 API 配置（能力 + 可选渠道覆盖），api_key 从系统钥匙串读取"""
         ac = self._data.get("api_config", {}).get(ability, {})
         if channel:
             override = ac.get("overrides", {}).get(channel, {})
-            if override and override.get("api_key"):
-                return override
-        return ac.get("default", {})
+            if override and (override.get("enabled") or self._get_api_key(ability, channel)):
+                cfg = dict(override)
+                cfg["api_key"] = self._get_api_key(ability, channel)
+                if cfg["api_key"]:
+                    return cfg
+        cfg = dict(ac.get("default", {}))
+        cfg["api_key"] = self._get_api_key(ability)
+        # 兼容旧配置：如果 model_id 为空但 model 有值，自动迁移
+        if not cfg.get("model_id") and cfg.get("model"):
+            cfg["model_id"] = cfg.pop("model")
+        return cfg
 
     def set_api_config(self, ability: str, config: dict, channel: str = None):
-        """设置 API 配置"""
+        """设置 API 配置；api_key 存入系统钥匙串，config.json 只存非敏感字段"""
+        config = dict(config)
+        api_key = config.pop("api_key", "")
+        self._set_api_key(ability, channel, api_key)
         if "api_config" not in self._data:
             self._data["api_config"] = {}
         if ability not in self._data["api_config"]:

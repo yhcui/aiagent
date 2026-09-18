@@ -1,4 +1,5 @@
 """任务数据模型"""
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -56,6 +57,13 @@ class Task:
     def from_dict(cls, d: dict):
         d = dict(d)
         d["status"] = TaskStatus(d.get("status", "pending"))
+        # 数据库中 image_paths 是 JSON 字符串，还原为 list
+        image_paths = d.get("image_paths")
+        if isinstance(image_paths, str):
+            try:
+                d["image_paths"] = json.loads(image_paths) if image_paths else []
+            except json.JSONDecodeError:
+                d["image_paths"] = []
         if d.get("created_at") and isinstance(d["created_at"], str):
             d["created_at"] = datetime.fromisoformat(d["created_at"])
         if d.get("updated_at") and isinstance(d["updated_at"], str):
