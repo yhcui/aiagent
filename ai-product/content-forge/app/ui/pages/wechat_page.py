@@ -12,7 +12,7 @@ from qfluentwidgets import (
     FluentIcon as FIF,
     setThemeColor, themeColor,
     HeaderCardWidget, CardWidget, ElevatedCardWidget,
-    PrimaryPushButton, PushButton, TransparentToolButton,
+    PrimaryPushButton, PushButton, TransparentToolButton, SwitchButton,
     LineEdit, PlainTextEdit,
     ProgressBar, IndeterminateProgressBar, ProgressRing,
     BodyLabel, CaptionLabel, StrongBodyLabel,
@@ -33,7 +33,7 @@ class TaskCard(ElevatedCardWidget):
         self.on_remove = on_remove
         self.on_copy = on_copy
         self.on_retry = on_retry
-        self.setFixedHeight(72)
+        self.setFixedHeight(88)
         root = QHBoxLayout(self)
         root.setContentsMargins(14, 10, 14, 10)
         root.setSpacing(12)
@@ -50,8 +50,12 @@ class TaskCard(ElevatedCardWidget):
         opinion = task.user_opinion if len(task.user_opinion) <= 60 else task.user_opinion[:57] + "…"
         self.opinion_lbl = CaptionLabel(opinion)
         self.opinion_lbl.setTextColor("#8a8f99", "#9aa0a8")
+        self.img_lbl = CaptionLabel("")
+        self.img_lbl.setTextColor("#16a34a", "#16a34a")
+        self.img_lbl.setVisible(False)
         body.addWidget(self.url_lbl)
         body.addWidget(self.opinion_lbl)
+        body.addWidget(self.img_lbl)
         root.addLayout(body, stretch=1)
 
         self.ring = ProgressRing(self)
@@ -147,6 +151,11 @@ class TaskCard(ElevatedCardWidget):
             self.ring.setValue(50)
         self._refresh_strip()
         self._update_ops()
+        if self.task.status == TaskStatus.COMPLETED and self.task.image_paths:
+            self.img_lbl.setText(f"🖼 已生成 {len(self.task.image_paths)} 张配图")
+            self.img_lbl.setVisible(True)
+        else:
+            self.img_lbl.setVisible(False)
 
 
 class WechatPage(ScrollArea):
@@ -261,6 +270,20 @@ class WechatPage(ScrollArea):
         self.opinion_input.setFixedHeight(84)
         lay.addWidget(self.opinion_input)
 
+        # 配图开关行
+        img_row = QHBoxLayout()
+        img_lbl = BodyLabel("生成前后配图")
+        img_tip = CaptionLabel("需要先在「API 配置 → 生图」中设置文生图模型")
+        img_tip.setTextColor("#8a8f99", "#9aa0a8")
+        self.img_switch = SwitchButton()
+        self.img_switch.setChecked(self.config.get("generate_images", False))
+        self.img_switch.checkedChanged.connect(self._on_image_switch_changed)
+        img_row.addWidget(img_lbl)
+        img_row.addWidget(self.img_switch)
+        img_row.addWidget(img_tip)
+        img_row.addStretch()
+        lay.addLayout(img_row)
+
         # 按钮行
         btn_row = QHBoxLayout()
         self.ai_btn = PushButton(FIF.ROBOT, "AI 生成观点")
@@ -290,6 +313,18 @@ class WechatPage(ScrollArea):
         else:
             self.mode_text_btn.setStyleSheet(f"background: {c}; color: white; border-radius: 6px; padding: 6px 14px;")
             self.mode_url_btn.setStyleSheet("")
+
+    def _on_image_switch_changed(self, checked: bool):
+        self.config.set("generate_images", checked)
+        if checked:
+            img_cfg = self.config.get_api_config("image")
+            if not img_cfg.get("api_key"):
+                InfoBar.warning(
+                    "未配置生图 API",
+                    "请先到「API 配置 → 生图」中设置 base_url、API Key 和 model_id",
+                    parent=self,
+                    duration=3000,
+                )
 
     def _build_opinion_panel(self):
         card = HeaderCardWidget()

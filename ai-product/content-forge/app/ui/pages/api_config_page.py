@@ -1,6 +1,6 @@
 """
 ContentForge
-页面：API 配置
+页面：API 配置（支持 text / image / video 独立配置）
 """
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
@@ -9,45 +9,55 @@ from PyQt6.QtWidgets import (
 
 from qfluentwidgets import (
     FluentIcon as FIF,
-    HeaderCardWidget, SwitchButton,
+    HeaderCardWidget,
     PrimaryPushButton, PushButton,
-    LineEdit, PasswordLineEdit, TextEdit,
+    LineEdit, PasswordLineEdit,
     BodyLabel, CaptionLabel,
-    InfoBar,
     SmoothScrollArea as ScrollArea,
 )
 
 from app.ui.components import PageHeader
 
 
-class ApiConfigPage(ScrollArea):
-    def __init__(self, config, parent=None):
+class _AbilityConfigCard(QWidget):
+    """单个能力（text/image/video）的 API 配置卡片"""
+
+    def __init__(self, ability: str, config, parent=None):
         super().__init__(parent)
+        self.ability = ability
         self.config = config
-        self.setObjectName("api")
-        self.setWidgetResizable(True)
-        canvas = QWidget()
-        self.setWidget(canvas)
-        self.enableTransparentBackground()
-        lay = QVBoxLayout(canvas)
-        lay.setContentsMargins(28, 16, 28, 24)
-        lay.setSpacing(14)
 
-        lay.addWidget(PageHeader(
-            "API 配置",
-            "生文 / 生图 / 生视频 独立配置 · API Key 加密存储于系统钥匙串"
-        ))
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(12)
 
-        # Global config card
-        card = HeaderCardWidget()
-        card.setTitle("全局默认配置")
-        form = QVBoxLayout()
-        form.setSpacing(12)
+        current = self.config.get_api_config(ability)
+        placeholders = {
+            "text": {
+                "base_url": "https://api.siliconflow.cn/v1",
+                "model_id": "Qwen/Qwen2.5-72B-Instruct",
+                "tip": "用于生成文章观点和图文内容",
+            },
+            "image": {
+                "base_url": "https://api.siliconflow.cn/v1",
+                "model_id": "black-forest-labs/FLUX.1-schnell",
+                "tip": "用于为文章生成前后两张配图（可选）",
+            },
+            "video": {
+                "base_url": "",
+                "model_id": "",
+                "tip": "生视频能力预留",
+            },
+        }
+        ph = placeholders.get(ability, placeholders["text"])
 
-        current = self.config.get_api_config("text")
-        self.base_url = self._row(form, "接口地址 base_url", "https://api.siliconflow.cn/v1", value=current.get("base_url", ""))
-        self.api_key = self._row(form, "API Key", "sk-••••••••••••••••", value=current.get("api_key", ""), password=True)
-        self.model_id = self._row(form, "模型唯一标识 model_id", "Qwen/Qwen2.5-72B-Instruct", value=current.get("model_id", ""))
+        tip = CaptionLabel(ph["tip"])
+        tip.setTextColor("#8a8f99", "#9aa0a8")
+        lay.addWidget(tip)
+
+        self.base_url = self._row(lay, "接口地址 base_url", ph["base_url"], current.get("base_url", ""))
+        self.api_key = self._row(lay, "API Key", "sk-••••••••••••••••", current.get("api_key", ""), password=True)
+        self.model_id = self._row(lay, "模型唯一标识 model_id", ph["model_id"], current.get("model_id", ""))
 
         row = QHBoxLayout()
         test = PushButton(FIF.SYNC, "测试连接")
@@ -57,10 +67,7 @@ class ApiConfigPage(ScrollArea):
         save = PrimaryPushButton(FIF.SAVE, "保存")
         save.clicked.connect(self._save_config)
         row.addWidget(save)
-        form.addLayout(row)
-        card.viewLayout.addLayout(form)
-        lay.addWidget(card)
-
+        lay.addLayout(row)
         lay.addStretch()
 
     def _row(self, form: QVBoxLayout, label: str, placeholder: str, value: str = "", password=False):
@@ -87,7 +94,6 @@ class ApiConfigPage(ScrollArea):
 
         try:
             from app.core.content_generator import ContentGenerator
-            # 临时创建配置进行测试
             test_config = type('TestConfig', (), {
                 'get_api_config': lambda self, ability: {
                     "base_url": base_url,
@@ -98,7 +104,7 @@ class ApiConfigPage(ScrollArea):
             generator = ContentGenerator(test_config)
             ok = generator.test_connection(base_url, api_key, model_id)
             if ok:
-                QMessageBox.information(self, "连接成功", "API 连接测试通过 ✅")
+                QMessageBox.information(self, "连接成功", f"{self.ability} API 连接测试通过 ✅")
             else:
                 QMessageBox.warning(self, "连接失败", "无法连接到服务器，请检查配置是否正确")
         except Exception as e:
@@ -113,9 +119,36 @@ class ApiConfigPage(ScrollArea):
             QMessageBox.warning(self, "配置不完整", "请填写完整的 API 配置")
             return
 
-        self.config.set_api_config("text", {
+        self.config.set_api_config(self.ability, {
             "base_url": base_url,
             "api_key": api_key,
             "model_id": model_id,
         })
-        QMessageBox.information(self, "已保存", "API 配置已保存到本地")
+        QMessageBox.information(self, "已保存", f"{self.ability} API 配置已保存到本地")
+
+
+class ApiConfigPage(ScrollArea):
+    def __init__(self, config, parent=None):
+        super().__init__(parent)
+        self.config = config
+        self.setObjectName("api")
+        self.setWidgetResizable(True)
+        canvas = QWidget()
+        self.setWidget(canvas)
+        self.enableTransparentBackground()
+        lay = QVBoxLayout(canvas)
+        lay.setContentsMargins(28, 16, 28, 24)
+        lay.setSpacing(14)
+
+        lay.addWidget(PageHeader(
+            "API 配置",
+            "生文 / 生图 / 生视频 独立配置 · API Key 加密存储于系统钥匙串"
+        ))
+
+        tabs = QTabWidget()
+        tabs.addTab(_AbilityConfigCard("text", config), "生文")
+        tabs.addTab(_AbilityConfigCard("image", config), "生图")
+        tabs.addTab(_AbilityConfigCard("video", config), "生视频（预留）")
+        lay.addWidget(tabs)
+
+        lay.addStretch()

@@ -14,6 +14,7 @@ from PyQt6.QtGui import QColor
 from qfluentwidgets import (
     FluentWindow, FluentIcon as FIF, NavigationItemPosition,
     setTheme, Theme, setThemeColor, themeColor,
+    CaptionLabel,
 )
 
 from loguru import logger
@@ -41,6 +42,23 @@ class ResultDialog(QDialog):
         lay = QVBoxLayout(self)
         lay.setContentsMargins(16, 16, 16, 16)
         lay.setSpacing(12)
+
+        # 配图信息（如果有）
+        if task.image_paths:
+            img_lay = QHBoxLayout()
+            img_info = CaptionLabel(f"已生成 {len(task.image_paths)} 张配图")
+            img_info.setTextColor("#16a34a", "#16a34a")
+            img_lay.addWidget(img_info)
+            img_lay.addStretch()
+            open_dir_btn = QPushButton("打开图片目录")
+            open_dir_btn.setStyleSheet(f"""
+                QPushButton {{ border: 1px solid #e8eaf0; border-radius: 6px; padding: 4px 12px;
+                               font-size: 12px; color: #646a73; background: white; }}
+                QPushButton:hover {{ border-color: {themeColor().name()}; color: {themeColor().name()}; }}
+            """)
+            open_dir_btn.clicked.connect(self._open_image_dir)
+            img_lay.addWidget(open_dir_btn)
+            lay.addLayout(img_lay)
 
         # 内容区
         self.editor = QTextEdit(self)
@@ -90,6 +108,14 @@ class ResultDialog(QDialog):
 
     def _regenerate(self):
         self.accept()
+
+    def _open_image_dir(self):
+        if not self.task.image_paths:
+            return
+        from PyQt6.QtCore import QUrl
+        from PyQt6.QtGui import QDesktopServices
+        dir_path = Path(self.task.image_paths[0]).parent
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir_path)))
 
 
 class MainWindow(FluentWindow):

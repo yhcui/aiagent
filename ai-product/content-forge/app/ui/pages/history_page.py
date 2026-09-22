@@ -62,7 +62,6 @@ class HistoryPage(ScrollArea):
             self.widget().layout().insertWidget(self.widget().layout().count() - 1, card)
 
     def _make_card(self, task, channel_names):
-        from qfluentwidgets import QVBoxLayout as QVBL
         card = ElevatedCardWidget()
         root = QVBoxLayout(card)
         root.setContentsMargins(16, 14, 16, 14)

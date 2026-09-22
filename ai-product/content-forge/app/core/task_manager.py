@@ -143,19 +143,30 @@ class TaskManager(QObject):
             # 2. 获取渠道系统提示词
             system_prompt = self.channel_manager.get_system_prompt(task.channel)
 
-            # 3. 生成图文（包含图片）
+            # 3. 生成图文（可选配图）
             export_dir = self.app_config.get_directory("exports")
-            generated, image_paths = self._generator.generate_article_with_images(
-                system_prompt=system_prompt,
-                user_opinion=task.user_opinion,
-                original_content=task.original_content,
-                export_dir=export_dir,
-                channel=task.channel,
-            )
-            
-            # 保存图片路径信息
-            if image_paths:
-                task.image_paths = [str(p) for p in image_paths]
+            generate_images = bool(self.app_config.get("generate_images", False))
+            if generate_images:
+                logger.info(f"任务 {task.id[:8]} 开启配图生成")
+                generated, image_paths = self._generator.generate_article_with_images(
+                    system_prompt=system_prompt,
+                    user_opinion=task.user_opinion,
+                    original_content=task.original_content,
+                    export_dir=export_dir,
+                    channel=task.channel,
+                )
+                if image_paths:
+                    task.image_paths = [str(p) for p in image_paths]
+                    logger.info(f"任务 {task.id[:8]} 已生成 {len(image_paths)} 张配图")
+                else:
+                    logger.warning(f"任务 {task.id[:8]} 未生成配图（可能未配置 image API 或生成失败）")
+            else:
+                generated = self._generator.generate_article(
+                    system_prompt=system_prompt,
+                    user_opinion=task.user_opinion,
+                    original_content=task.original_content,
+                    channel=task.channel,
+                )
             
             logger.info(f"[DEBUG] 生成内容长度：{len(generated) if generated else 0}")
 

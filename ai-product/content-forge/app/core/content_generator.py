@@ -111,110 +111,121 @@ class ContentGenerator:
         返回 (文章内容, [图片1路径, 图片2路径])
 
         图片插入规则：
-        - 第一张：若第一段>100字插在第一段后，否则找100字位置
-        - 第二张：插在倒数第三段左右，若该段<100字则找100字位置
+        - 第一张：若第一段>100字插在第一段后，否则找到前面段落累计>100字的位置插入
+        - 第二张：插在倒数第三段左右，若该段<100字，则往前找到累计>100字的位置插入
         """
         # 1. 先生成文章
         article = self.generate_article(system_prompt, user_opinion, original_content, channel)
-        
+
         image_paths = []
-        
+
         # 2. 尝试生成图片（需要配置 image API）
         try:
             service = self._get_ai_service(ability="image")
-            
+
             if export_dir is None:
                 export_dir = self.app_config.get_directory("images")
             export_dir.mkdir(parents=True, exist_ok=True)
-            
+
             import time
-            timestamp = int(time.time())
-            
+            import uuid
+            prefix = f"{int(time.time())}_{uuid.uuid4().hex[:6]}"
+
             # 生成第一张图片（开头配图）
-            prompt_1 = f"为以下文章生成一张主题相关的配图，风格适合微信公众号：\n\n观点摘要：{user_opinion[:200]}"
+            prompt_1 = self._build_image_prompt(user_opinion, position="header")
             img_data_1 = service.generate_image(prompt_1)
             if img_data_1:
-                img_path_1 = export_dir / f"{timestamp}_header.png"
+                img_path_1 = export_dir / f"{prefix}_header.png"
                 img_path_1.write_bytes(img_data_1)
                 image_paths.append(img_path_1)
                 logger.info(f"已生成首图：{img_path_1}")
-            
+
             # 生成第二张图片（结尾配图）
-            prompt_2 = f"为以下文章生成一张总结性的配图，风格适合微信公众号：\n\n观点摘要：{user_opinion[:200]}"
+            prompt_2 = self._build_image_prompt(user_opinion, position="footer")
             img_data_2 = service.generate_image(prompt_2)
             if img_data_2:
-                img_path_2 = export_dir / f"{timestamp}_footer.png"
+                img_path_2 = export_dir / f"{prefix}_footer.png"
                 img_path_2.write_bytes(img_data_2)
                 image_paths.append(img_path_2)
                 logger.info(f"已生成尾图：{img_path_2}")
-                
+
+        except ValueError as e:
+            # 配置错误（如 API Key 未配置），记录但不阻断文章生成
+            logger.warning(f"图片生成跳过：{e}")
         except Exception as e:
-            logger.warning(f"图片生成跳过（未配置或失败）：{e}")
-        
+            logger.warning(f"图片生成失败：{e}")
+
         # 3. 将图片插入到文章中
         if len(image_paths) >= 1 and image_paths[0].exists():
             article = self._insert_image_at_position(article, str(image_paths[0]), position="first")
         if len(image_paths) >= 2 and image_paths[1].exists():
             article = self._insert_image_at_position(article, str(image_paths[1]), position="last")
-        
+
         return article, image_paths
 
-    def _insert_image_at_position(self, article: str, image_path: str, position: str = "first") -> str:
+    @staticmethod
+    def _build_image_prompt(user_opinion: str, position: str = "header") -> str:
+        """构建文生图提示词"""
+        opinion = user_opinion[:200].strip()
+        if position == "header":
+            return (
+                f"Create a featured illustration for a WeChat article. "
+                f"Theme: {opinion}. "
+                f"Style: modern, clean, suitable for social media, no text."
+            )
+        return (
+            f"Create a concluding illustration for a WeChat article. "
+            f"Theme: {opinion}. "
+            f"Style: modern, clean, suitable for social media, no text."
+        )
+
+    @staticmethod
+    def _insert_image_at_position(article: str, image_path: str, position: str = "first") -> str:
         """
         根据规则将图片插入到文章指定位置
-        
+
         position="first":
           - 若第一段>100字，插在第一段后
-          - 否则找到累计100字的位置插入
-        
+          - 否则找到前面段落累计>100字的位置插入
+
         position="last":
-          - 插在倒数第三段左右
-          - 若该段<100字，则找100字位置
+          - 从倒数第三段开始（保证在后半部分）
+          - 若该段及向后累计<100字，则往前找累计>100字的位置，但不越过文档中线
         """
-        # 按段落分割（保留换行符）
         paragraphs = article.split('\n\n')
-        if not paragraphs:
+        if not paragraphs or not article.strip():
             return f"\n![配图]({image_path})\n\n{article}"
-        
+
         image_markdown = f"\n![配图]({image_path})\n"
-        
+
         if position == "first":
-            # 检查第一段字数
-            first_para = paragraphs[0]
-            if len(first_para) > 100:
-                # 插在第一段后面
-                paragraphs.insert(1, image_markdown)
-            else:
-                # 找到累计超过100字的位置
-                total_len = 0
-                insert_idx = 1
-                for i, para in enumerate(paragraphs):
-                    total_len += len(para)
-                    if total_len > 100:
-                        insert_idx = i + 1
-                        break
-                paragraphs.insert(insert_idx, image_markdown)
-                    
+            total_len = 0
+            insert_idx = 1
+            for i, para in enumerate(paragraphs):
+                total_len += len(para)
+                if total_len > 100:
+                    insert_idx = i + 1
+                    break
+            paragraphs.insert(insert_idx, image_markdown)
+
         elif position == "last":
-            # 找倒数第三段的位置
             if len(paragraphs) < 3:
-                # 段落太少，直接在末尾插入
                 paragraphs.append(image_markdown)
             else:
-                target_idx = len(paragraphs) - 3
+                mid = len(paragraphs) // 2
+                target_idx = max(mid, len(paragraphs) - 3)
                 target_para = paragraphs[target_idx]
-                
+
                 if len(target_para) < 100:
-                    # 该段落不足100字，往前找累计100字位置
                     total_len = 0
-                    for i in range(target_idx, -1, -1):
+                    for i in range(target_idx, mid - 1, -1):
                         total_len += len(paragraphs[i])
                         if total_len > 100:
                             target_idx = i + 1
                             break
                     else:
-                        target_idx = 1
-                
+                        target_idx = mid + 1
+
                 paragraphs.insert(target_idx, image_markdown)
-        
+
         return '\n\n'.join(paragraphs)
