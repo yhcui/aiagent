@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">想法</string>
+    <string name="sort_newest">最新在前</string>
+    <string name="sort_oldest">最早在前</string>
+    <string name="sort_custom">自定义</string>
+    <string name="empty_title">还没有想法</string>
+    <string name="empty_hint">点右下角 + 记下第一条</string>
+    <string name="sheet_title">记一条想法</string>
+    <string name="sheet_close">收起</string>
+    <string name="input_hint">此刻在想什么…</string>
+    <string name="save">保存</string>
+</resources>
