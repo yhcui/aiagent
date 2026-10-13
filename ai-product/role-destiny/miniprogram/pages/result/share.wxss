@@ -1,93 +1,136 @@
-/* 分享页样式 */
+/* 分享海报页 · 命格御画 */
 
 .share-page {
   min-height: 100vh;
-  background: #1a1a1a;
   display: flex;
   flex-direction: column;
-}
-
-/* 海报预览 */
-.poster-preview {
-  flex: 1;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 40rpx;
+  background:
+    radial-gradient(circle at 20% 8%, rgba(255, 107, 157, 0.14) 0%, rgba(255, 107, 157, 0) 55%),
+    radial-gradient(circle at 85% 90%, rgba(201, 162, 75, 0.12) 0%, rgba(201, 162, 75, 0) 55%),
+    #2E2430;
 }
 
-.poster-image {
+/* 顶栏 */
+.share-head {
   width: 100%;
-  max-width: 600rpx;
-  border-radius: 20rpx;
-  box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx 28rpx;
+  box-sizing: border-box;
 }
 
-/* 加载状态 */
-.loading-state {
-  flex: 1;
+.close-btn {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1rpx solid rgba(255, 255, 255, 0.18);
+}
+
+.close-chev {
+  font-size: 40rpx;
+  line-height: 1;
+  color: #fff;
+  margin-top: -4rpx;
+}
+
+.share-title {
+  font-size: 32rpx;
+  letter-spacing: 8rpx;
+  color: #F5E9CE;
+}
+
+.head-holder {
+  width: 64rpx;
+}
+
+/* 海报舞台 */
+.poster-stage {
+  margin-top: 10rpx;
+  display: flex;
+  justify-content: center;
+}
+
+.poster-canvas {
+  width: 560rpx;
+  height: 1000rpx;
+  border-radius: 32rpx;
+  box-shadow: 0 30rpx 80rpx rgba(0, 0, 0, 0.45);
+}
+
+/* 绘制中 */
+.poster-loading {
+  margin-top: 200rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  color: #999;
+  padding: 0 60rpx;
 }
 
-.loading-spinner {
-  width: 60rpx;
-  height: 60rpx;
-  border: 4rpx solid #444;
-  border-top-color: #FF6B6B;
+.loading-ring {
+  width: 64rpx;
+  height: 64rpx;
+  border: 4rpx solid rgba(255, 255, 255, 0.16);
+  border-top-color: #FFB7CC;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20rpx;
+  animation: spin 0.9s linear infinite;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-/* 操作按钮 */
-.action-bar {
-  display: flex;
-  gap: 20rpx;
-  padding: 30rpx;
-  background: #222;
+.pl-text {
+  margin-top: 28rpx;
+  font-size: 26rpx;
+  letter-spacing: 2rpx;
+  color: rgba(255, 255, 255, 0.62);
+  text-align: center;
 }
 
-.action-bar button {
-  flex: 1;
-  height: 88rpx;
-  border-radius: 44rpx;
-  font-size: 30rpx;
+.retry-btn {
+  margin-top: 36rpx;
+  width: 260rpx;
+  height: 80rpx;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+/* 操作栏 */
+.share-bar {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  gap: 24rpx;
+  padding: 30rpx 32rpx 34rpx;
+}
+
+.btn-share-ghost {
+  flex-shrink: 0;
+  width: 240rpx;
+  height: 96rpx;
+  border-radius: 999rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 28rpx;
+  letter-spacing: 2rpx;
+  color: #F5E9CE;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2rpx solid rgba(255, 255, 255, 0.32);
+  margin: 0;
+}
+
+.btn-share-ghost::after {
   border: none;
 }
 
 .btn-save {
-  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
-  color: white;
-}
-
-.btn-share {
-  background: #52C41A;
-  color: white;
-}
-
-/* 关闭按钮 */
-.close-btn {
-  position: fixed;
-  top: 60rpx;
-  right: 30rpx;
-  width: 60rpx;
-  height: 60rpx;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  font-size: 40rpx;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  flex: 1;
 }

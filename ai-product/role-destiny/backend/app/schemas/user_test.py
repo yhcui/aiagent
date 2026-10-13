@@ -12,6 +12,13 @@ class UserTestCreateSchema(BaseModel):
     answers: List[int] = Field(..., description="选项ID列表，按题目顺序")
 
 
+class SubmitRequestSchema(BaseModel):
+    """提交测试请求模型（JSON body）"""
+    openid: str
+    test_id: int
+    answers: List[int] = Field(..., description="选项ID列表，按题目顺序")
+
+
 class UserTestResultSchema(BaseModel):
     """测试结果响应模型"""
     id: int
@@ -31,6 +38,8 @@ class UserTestSchema(BaseModel):
     id: int
     test_id: int
     result_role_id: Optional[int] = None
+    role_name: Optional[str] = None
+    role_code: Optional[str] = None
     match_score: Optional[float] = None
     is_paid: bool = False
     status: str = "completed"

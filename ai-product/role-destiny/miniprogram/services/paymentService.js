@@ -19,4 +19,4 @@ class PaymentService {
   }
 }
 
-module.exports = PaymentService;
+module.exports = new PaymentService();

@@ -1,54 +1,60 @@
-<!--测试详情页-->
+<!--测试详情页 · 奏折-->
 <view class="detail-page" wx:if="{{!loading && test}}">
-  <!-- 封面图 -->
-  <view class="cover-section">
-    <image
-      class="cover-image"
-      src="{{test.cover_image || '/images/default_cover.png'}}"
-      mode="aspectFill"
-    ></image>
-    <view class="cover-overlay">
-      <text class="cover-title">{{test.title}}</text>
+
+  <!-- 封面英雄 -->
+  <view class="cover">
+    <view class="cover-glow a"></view>
+    <view class="cover-glow b"></view>
+    <view class="cover-inner a-bloom">
+      <text class="cover-emblem">🏮</text>
+      <view class="cover-title song">{{test.title}}</view>
+      <view class="cover-share">{{test.share_title}}</view>
     </view>
   </view>
 
-  <!-- 测试信息 -->
-  <view class="info-section">
-    <view class="info-card">
-      <view class="info-row">
-        <text class="info-label">题目数量</text>
-        <text class="info-value">{{test.question_count}} 题</text>
-      </view>
-      <view class="info-row">
-        <text class="info-label">预估时长</text>
-        <text class="info-value">约 {{test.question_count * 0.5}} 分钟</text>
-      </view>
-      <view class="info-row">
-        <text class="info-label">测试费用</text>
-        <text class="info-value price" wx:if="{{test.price > 0}}">¥{{test.priceYuan}}</text>
-        <text class="info-value free" wx:else>免费</text>
-      </view>
+  <!-- 奏折说明 -->
+  <view class="paper a-rise" style="animation-delay: 0.08s;">
+    <view class="paper-edge"></view>
+    <view class="card-head">
+      <view class="head-emblem">📜</view>
+      <view class="head-title">测 试 说 明</view>
+    </view>
+    <view class="paper-body">{{test.description || '暂无说明'}}</view>
+  </view>
+
+  <!-- 卷册信息 -->
+  <view class="paper a-rise" style="animation-delay: 0.18s;">
+    <view class="paper-edge"></view>
+    <view class="paper-row">
+      <view class="row-label">题目数量</view>
+      <view class="row-value">{{test.question_count}} 题</view>
+    </view>
+    <view class="gold-rule"></view>
+    <view class="paper-row">
+      <view class="row-label">预估时长</view>
+      <view class="row-value">约 {{test.question_count * 0.5}} 分钟</view>
+    </view>
+    <view class="gold-rule"></view>
+    <view class="paper-row">
+      <view class="row-label">命格试金</view>
+      <view class="row-value price" wx:if="{{test.price > 0}}">¥{{test.priceYuan}}</view>
+      <view class="row-value free" wx:else>免费</view>
     </view>
   </view>
 
-  <!-- 测试描述 -->
-  <view class="desc-section">
-    <view class="section-title">测试说明</view>
-    <view class="desc-content">
-      <text>{{test.description || '暂无说明'}}</text>
-    </view>
-  </view>
+  <view class="bottom-space"></view>
 
-  <!-- 底部操作栏 -->
-  <view class="bottom-bar safe-area-bottom">
-    <button class="btn-start" bindtap="startTest">
-      {{test.price > 0 ? '开始测试（¥' + test.priceYuan + '）' : '开始测试'}}
-    </button>
+  <!-- 底部 CTA -->
+  <view class="cta-bar safe-bottom">
+    <view class="btn-main" bindtap="startTest">
+      {{test.price > 0 ? '✨ 开始测算 ¥' + test.priceYuan : '✨ 开始测算'}}
+    </view>
   </view>
 </view>
 
-<!-- 加载状态 -->
+<!-- 加载骨架 -->
 <view class="loading-page" wx:if="{{loading}}">
-  <view class="loading-spinner"></view>
-  <text>加载中...</text>
+  <view class="skeleton-block" style="height: 480rpx;"></view>
+  <view class="skeleton-block" style="height: 260rpx; margin-top: 24rpx;"></view>
+  <view class="loading-tip">宫人正在铺纸研墨…</view>
 </view>

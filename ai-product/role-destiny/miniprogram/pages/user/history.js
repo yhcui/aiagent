@@ -1,8 +1,9 @@
 /**
- * 测试历史记录页
+ * 测试历史记录页 - 命格卷宗
  */
 const app = getApp();
 const quizService = require('../../services/quizService');
+const { getRoleStyle } = require('../../utils/roleStyle');
 
 Page({
   data: {
@@ -31,11 +32,16 @@ Page({
         0
       );
 
+      const historyList = (history || []).map((item) => ({
+        ...item,
+        roleStyle: getRoleStyle(item.role_code),
+      }));
+
       this.setData({
-        historyList: history || [],
+        historyList,
         loading: false,
         refreshing: false,
-        empty: !history || history.length === 0
+        empty: !historyList.length
       });
     } catch (err) {
       console.error('Load history failed:', err);
@@ -50,6 +56,15 @@ Page({
     const resultId = e.currentTarget.dataset.id;
     wx.navigateTo({
       url: `/pages/result/detail?resultId=${resultId}`
+    });
+  },
+
+  /**
+   * 去测算
+   */
+  goTest() {
+    wx.switchTab({
+      url: '/pages/index/index'
     });
   },
 

@@ -32,6 +32,13 @@ class UserCreateSchema(BaseModel):
 
 class UserUpdateSchema(BaseModel):
     """更新用户请求模型"""
+    openid: Optional[str] = None
     nickname: Optional[str] = None
     avatar: Optional[str] = None
     phone: Optional[str] = None
+
+
+class BindPhoneRequestSchema(BaseModel):
+    """绑定手机号请求模型"""
+    openid: str
+    code: str

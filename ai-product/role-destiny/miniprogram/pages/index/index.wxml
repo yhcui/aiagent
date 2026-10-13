@@ -1,60 +1,99 @@
-<!--首页 - 启动页面-->
-<view class="index-page">
-  <!-- 顶部装饰 -->
-  <view class="header">
-    <view class="header-bg"></view>
-    <view class="header-content">
-      <view class="logo">
-        <image src="/images/logo.png" mode="aspectFit"></image>
+<!--首页 · 命格宫殿-->
+<view class="home">
+
+  <!-- ══ 英雄区 ══ -->
+  <view class="hero" style="padding-top: {{statusBarH + 24}}px;">
+
+    <!-- 云雾与乱红 -->
+    <view class="deco cloud-a"></view>
+    <view class="deco cloud-b"></view>
+    <view class="deco petal-a a-drift">🌸</view>
+    <view class="deco petal-b a-drift" style="animation-delay: 1.6s;">🌸</view>
+
+    <!-- 品牌 -->
+    <view class="brand">
+      <view class="brand-seal">👑</view>
+      <view class="brand-name song">角色测算</view>
+      <view class="brand-sub">八道题 · 测出你的宫闱命格</view>
+    </view>
+
+    <!-- 月门 -->
+    <view class="gate a-bloom">
+      <view class="gate-halo"></view>
+      <view class="gate-ring"></view>
+      <view class="gate-spark s1">✦</view>
+      <view class="gate-spark s2">✦</view>
+
+      <view
+        class="gate-emblem {{item.cls}}"
+        wx:for="{{gateEmblems}}"
+        wx:key="code"
+      >
+        <view
+          class="gem-circle a-drift"
+          style="background: {{item.style.grad}}; animation-delay: {{item.delay}}s;"
+        >
+          <text class="gem-emoji">{{item.style.emblem}}</text>
+        </view>
       </view>
-      <text class="app-title">角色测算</text>
-      <text class="app-subtitle">发现你的性格原型</text>
+    </view>
+
+    <!-- CTA -->
+    <view class="cta a-rise" style="animation-delay: 0.16s;">
+      <view class="btn-main" bindtap="startTest">✨ 开始测算 ✨</view>
+      <view class="cta-note" wx:if="{{firstTest}}">免费测完 · ¥{{firstTest.priceYuan}} 解锁完整命格</view>
+    </view>
+
+    <!-- 播报条 -->
+    <view class="ticker a-rise" style="animation-delay: 0.28s;">
+      <text class="ticker-mark">✦</text>
+      <text class="ticker-text a-fade">{{tickerText}}</text>
     </view>
   </view>
 
-  <!-- 测试列表 -->
-  <view class="test-section">
-    <view class="section-header">
-      <text class="section-title">热门测试</text>
-      <text class="section-more" bindtap="goTestList">更多 ></text>
+  <!-- ══ 本期限定 ══ -->
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title song">本期 · 宫闱限定</view>
+      <view class="section-link" bindtap="goTestList">全部测算 ›</view>
     </view>
+    <view class="gold-rule"></view>
 
-    <view class="test-list" wx:if="{{!loading && testList.length > 0}}">
-      <view
-        class="test-card"
-        wx:for="{{testList}}"
-        wx:key="id"
-        bindtap="goTest"
-        data-id="{{item.id}}"
-      >
-        <view class="test-cover">
-          <image
-            src="{{item.cover_image || '/images/default_cover.png'}}"
-            mode="aspectFill"
-          ></image>
-        </view>
-        <view class="test-info">
-          <text class="test-title">{{item.title}}</text>
-          <text class="test-desc">{{item.description}}</text>
-          <view class="test-meta">
-            <text class="test-price" wx:if="{{item.price > 0}}">¥{{item.priceYuan}}</text>
-            <text class="test-price free" wx:else>免费</text>
-          </view>
+    <!-- 骨架 -->
+    <view class="feature-card skeleton-block" wx:if="{{loading}}" style="height: 420rpx;"></view>
+
+    <!-- 限定卡 -->
+    <view
+      class="feature-card a-rise"
+      wx:for="{{testList}}"
+      wx:key="id"
+      bindtap="goTest"
+      data-id="{{item.id}}"
+    >
+      <view class="fc-cover">
+        <view class="fc-glow glow-a"></view>
+        <view class="fc-glow glow-b"></view>
+        <text class="fc-emblem">🏮</text>
+        <view class="fc-flag">限 定</view>
+        <view class="fc-lantern">✦</view>
+      </view>
+      <view class="fc-body">
+        <view class="fc-title song">{{item.title}}</view>
+        <view class="fc-desc">{{item.description}}</view>
+        <view class="fc-meta">
+          <view class="jade-tag">{{item.question_count || 8}} 题 · 约 4 分钟</view>
+          <view class="fc-price">¥{{item.priceYuan}}</view>
         </view>
       </view>
     </view>
 
-    <view class="loading-state" wx:if="{{loading}}">
-      <view class="loading-spinner"></view>
-      <text>加载中...</text>
-    </view>
-
+    <!-- 空态 -->
     <view class="empty-state" wx:if="{{!loading && testList.length === 0}}">
       <image src="/images/empty.png" mode="aspectFit"></image>
-      <text>暂无测试</text>
+      <view class="empty-title">宫人们正在筹备测算</view>
+      <view class="empty-hint">稍后再来吧</view>
     </view>
   </view>
 
-  <!-- 底部安全区 -->
-  <view class="safe-area-bottom"></view>
+  <view class="safe-bottom"></view>
 </view>

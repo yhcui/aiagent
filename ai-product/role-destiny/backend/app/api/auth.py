@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
-from app.schemas.user import UserSchema, UserUpdateSchema
+from app.schemas.user import UserSchema, UserUpdateSchema, BindPhoneRequestSchema
 from app.services.wechat import wechat_service
 from loguru import logger
 
@@ -60,17 +60,22 @@ async def get_user_info(openid: str, db: Session = Depends(get_db)):
 
 @router.put("/user", response_model=UserSchema)
 async def update_user(
-    openid: str,
     data: UserUpdateSchema,
+    openid: str = None,
     db: Session = Depends(get_db)
 ):
     """更新用户信息"""
-    user = db.query(User).filter(User.openid == openid).first()
+    user_openid = openid or data.openid
+    if not user_openid:
+        raise HTTPException(status_code=400, detail="openid不能为空")
+
+    user = db.query(User).filter(User.openid == user_openid).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
 
     update_data = data.model_dump(exclude_unset=True)
+    update_data.pop("openid", None)
     for key, value in update_data.items():
         setattr(user, key, value)
 
@@ -85,12 +90,11 @@ async def update_user(
 
 @router.post("/bind-phone")
 async def bind_phone(
-    openid: str,
-    code: str,
+    data: BindPhoneRequestSchema,
     db: Session = Depends(get_db)
 ):
     """绑定手机号"""
-    user = db.query(User).filter(User.openid == openid).first()
+    user = db.query(User).filter(User.openid == data.openid).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
@@ -101,7 +105,7 @@ async def bind_phone(
         raise HTTPException(status_code=500, detail="获取access_token失败")
 
     # 获取手机号
-    phone = await wechat_service.get_phone_number(access_token, code)
+    phone = await wechat_service.get_phone_number(access_token, data.code)
     if not phone:
         raise HTTPException(status_code=400, detail="获取手机号失败")
 

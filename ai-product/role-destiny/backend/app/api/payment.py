@@ -1,14 +1,18 @@
 """
 支付相关API
 """
+import time
+import uuid
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.config import settings
 from app.models.user import User
 from app.models.order import Order
 from app.models.user_test import UserTest
 from app.models.test import Test
-from app.schemas.order import PaymentResponseSchema
+from app.schemas.order import PaymentResponseSchema, PaymentRequestSchema
 from app.services.payment import payment_service
 from loguru import logger
 
@@ -17,13 +21,16 @@ router = APIRouter(prefix="/api/payment", tags=["支付"])
 
 @router.post("/create", response_model=PaymentResponseSchema)
 async def create_payment(
-    openid: str,
-    result_id: int,
+    data: PaymentRequestSchema,
     db: Session = Depends(get_db)
 ):
     """
     发起支付
+    DEBUG 模式或未配置商户号时走 Mock 支付（直接标记已支付）
     """
+    openid = data.openid
+    result_id = data.result_id
+
     # 验证用户
     user = db.query(User).filter(User.openid == openid).first()
     if not user:
@@ -42,6 +49,42 @@ async def create_payment(
     if user_test.is_paid:
         raise HTTPException(status_code=400, detail="该结果已支付")
 
+    # 获取测试价格
+    test = db.query(Test).filter(Test.id == user_test.test_id).first()
+    amount = (test.price / 100) if test else 0.99  # 默认0.99元
+
+    # ── Mock 支付（DEBUG 模式 / 未配置商户号）──
+    if settings.DEBUG or not settings.WECHAT_MCH_ID:
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        order_no = f"MOCK{int(time.time())}{uuid.uuid4().hex[:8].upper()}"
+
+        order = Order(
+            order_no=order_no,
+            user_id=user.id,
+            result_id=result_id,
+            test_id=user_test.test_id,
+            amount=amount,
+            status="paid",
+            transaction_id=f"MOCK{int(time.time())}",
+            pay_time=now,
+            expire_time="",
+        )
+        db.add(order)
+
+        user_test.is_paid = 1
+        user_test.paid_at = now
+
+        db.commit()
+        logger.info(f"Mock支付成功: order_no={order_no}, result_id={result_id}")
+
+        return {
+            "order_no": order_no,
+            "pay_url": "",
+            "expire_time": "",
+            "mock": True,
+        }
+
+    # ── 真实微信支付 ──
     # 检查是否已有待支付订单
     existing_order = db.query(Order).filter(
         Order.result_id == result_id,
@@ -54,11 +97,8 @@ async def create_payment(
             "order_no": existing_order.order_no,
             "pay_url": "",  # 需要重新生成支付链接
             "expire_time": existing_order.expire_time or "",
+            "mock": False,
         }
-
-    # 获取测试价格
-    test = db.query(Test).filter(Test.id == user_test.test_id).first()
-    amount = (test.price / 100) if test else 0.99  # 默认0.99元
 
     # 创建支付订单
     result = await payment_service.create_order(
@@ -72,6 +112,7 @@ async def create_payment(
     if not result:
         raise HTTPException(status_code=500, detail="创建支付订单失败")
 
+    result["mock"] = False
     return result
 
 

@@ -1,118 +1,150 @@
-/* 测试列表页样式 */
+/* 测试列表页 · 宫闱测算 */
 
 .list-page {
   min-height: 100vh;
-  background: #F5F5F5;
-  padding: 20rpx;
+  background: linear-gradient(180deg, #FFF0F3 0%, #FFF8F3 220rpx);
+  padding: 40rpx 32rpx;
 }
 
-.list-container {
-  max-width: 800rpx;
-  margin: 0 auto;
+/* 页首 */
+.page-head {
+  margin-bottom: 36rpx;
 }
 
-.test-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20rpx;
+.ph-title {
+  font-size: 44rpx;
+  font-weight: 700;
+  letter-spacing: 6rpx;
+  color: var(--c-ink);
 }
 
-.test-item {
-  width: calc(50% - 10rpx);
-  background: white;
-  border-radius: 16rpx;
-  overflow: hidden;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
-}
-
-.test-cover {
-  position: relative;
-  height: 280rpx;
-  overflow: hidden;
-}
-
-.test-cover image {
-  width: 100%;
-  height: 100%;
-}
-
-.test-price-tag {
-  position: absolute;
-  top: 16rpx;
-  right: 16rpx;
-  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
-  color: white;
-  font-size: 22rpx;
-  font-weight: 600;
-  padding: 6rpx 16rpx;
-  border-radius: 20rpx;
-}
-
-.test-price-tag.free {
-  background: linear-gradient(135deg, #52C41A, #73D13D);
-}
-
-.test-info {
-  padding: 20rpx;
-}
-
-.test-title {
-  display: block;
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #333;
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.test-desc {
-  display: block;
-  font-size: 24rpx;
-  color: #999;
-  margin-top: 8rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.test-stats {
-  display: flex;
-  gap: 20rpx;
+.ph-sub {
   margin-top: 12rpx;
+  font-size: 24rpx;
+  letter-spacing: 2rpx;
+  color: var(--c-ash);
 }
 
-.stat-item {
-  font-size: 22rpx;
-  color: #999;
+.page-head .gold-rule {
+  margin-top: 26rpx;
 }
 
-.loading-state,
-.empty-state {
+/* 测题卡片 */
+.test-list {
   display: flex;
   flex-direction: column;
+  gap: 28rpx;
+}
+
+.test-card {
+  background: #fff;
+  border-radius: var(--r-card);
+  overflow: hidden;
+  box-shadow: var(--sh-card);
+  transition: transform 0.15s ease;
+}
+
+.test-card:active {
+  transform: scale(0.98);
+}
+
+.tc-cover {
+  position: relative;
+  height: 280rpx;
+  display: flex;
   align-items: center;
-  padding: 120rpx 0;
-  color: #999;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.loading-spinner {
-  width: 60rpx;
-  height: 60rpx;
-  border: 4rpx solid #eee;
-  border-top-color: #FF6B6B;
+.hue-pink {
+  background: linear-gradient(135deg, #FFE7EC 0%, #FFC9D8 55%, #F7B9CB 100%);
+}
+
+.hue-gold {
+  background: linear-gradient(135deg, #FBF3DC 0%, #F2DFAE 55%, #E8CF90 100%);
+}
+
+.tc-glow {
+  position: absolute;
+  width: 420rpx;
+  height: 420rpx;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20rpx;
+  right: -150rpx;
+  top: -200rpx;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0) 70%);
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.glow-tl {
+  right: auto;
+  top: auto;
+  left: -130rpx;
+  bottom: -190rpx;
+  width: 340rpx;
+  height: 340rpx;
+  background: radial-gradient(circle, rgba(255, 170, 194, 0.3) 0%, rgba(255, 170, 194, 0) 70%);
 }
 
-.empty-state image {
-  width: 200rpx;
-  height: 200rpx;
-  margin-bottom: 20rpx;
+.tc-emblem {
+  position: relative;
+  font-size: 104rpx;
+  filter: drop-shadow(0 10rpx 16rpx rgba(150, 60, 90, 0.22));
+}
+
+.tc-flag {
+  position: absolute;
+  right: 24rpx;
+  bottom: 20rpx;
+  padding: 6rpx 18rpx;
+  font-size: 20rpx;
+  letter-spacing: 4rpx;
+  color: #8A6420;
+  border: 1rpx solid rgba(201, 162, 75, 0.55);
+  border-radius: 8rpx;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.tc-body {
+  padding: 28rpx 32rpx 32rpx;
+}
+
+.tc-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+  color: var(--c-ink);
+}
+
+.tc-desc {
+  margin-top: 12rpx;
+  font-size: 25rpx;
+  color: var(--c-ash);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tc-meta {
+  margin-top: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tc-price {
+  font-family: var(--font-song);
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--c-rouge);
+}
+
+.tc-price.free {
+  color: var(--c-jade);
+}
+
+/* 骨架 */
+.sk-list {
+  display: flex;
+  flex-direction: column;
 }

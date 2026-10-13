@@ -1,64 +1,68 @@
-<!--个人中心页-->
+<!--个人中心页 · 我的命牌-->
 <view class="profile-page">
-  <!-- 用户信息卡片 -->
-  <view class="user-card">
-    <view class="user-info">
-      <image
-        class="avatar"
-        src="{{userInfo.avatar || '/images/default_avatar.png'}}"
-        mode="aspectFill"
-      ></image>
-      <view class="user-detail">
-        <text class="nickname">{{userInfo.nickname || '未设置昵称'}}</text>
-        <text class="user-id">ID: {{userInfo.openid ? userInfo.openid.slice(0, 8) : '----'}}...</text>
+
+  <!-- 命牌 -->
+  <view class="id-panel">
+    <view class="panel-glow a"></view>
+    <view class="panel-glow b"></view>
+
+    <view class="id-row a-rise">
+      <view class="avatar-ring">
+        <image
+          wx:if="{{userInfo && userInfo.avatar}}"
+          class="avatar-img"
+          src="{{userInfo.avatar}}"
+          mode="aspectFill"
+        ></image>
+        <view wx:else class="avatar-fallback">🙂</view>
+      </view>
+      <view class="id-info">
+        <view class="nickname song">{{userInfo && userInfo.nickname ? userInfo.nickname : '未赐名的小主'}}</view>
+        <view class="id-code">宫籍 {{userInfo && userInfo.openid ? userInfo.openid.slice(0, 8) : '————'}}…</view>
+      </view>
+    </view>
+
+    <!-- 心绪统计 -->
+    <view class="stats a-rise" style="animation-delay: 0.12s;">
+      <view class="stat-cell" bindtap="goHistory">
+        <view class="stat-num song">{{stats.testCount}}</view>
+        <view class="stat-label">测算次数</view>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-cell" bindtap="goHistory">
+        <view class="stat-num song">{{stats.paidCount}}</view>
+        <view class="stat-label">已解锁命格</view>
       </view>
     </view>
   </view>
 
-  <!-- 统计数据 -->
-  <view class="stats-card">
-    <view class="stat-item" bindtap="goHistory">
-      <text class="stat-value">{{stats.testCount}}</text>
-      <text class="stat-label">测试记录</text>
-    </view>
-    <view class="stat-divider"></view>
-    <view class="stat-item">
-      <text class="stat-value">{{stats.paidCount}}</text>
-      <text class="stat-label">已解锁</text>
-    </view>
-  </view>
-
-  <!-- 功能菜单 -->
-  <view class="menu-section">
+  <!-- 宫务菜单 -->
+  <view class="menu a-rise" style="animation-delay: 0.24s;">
     <view class="menu-item" bindtap="goHistory">
-      <view class="menu-left">
-        <text class="menu-icon">📋</text>
-        <text class="menu-text">测试记录</text>
-      </view>
-      <text class="menu-arrow">›</text>
+      <view class="menu-icon">📜</view>
+      <view class="menu-text">测算记录</view>
+      <view class="menu-arrow">›</view>
     </view>
+
+    <view class="gold-rule menu-rule"></view>
 
     <view class="menu-item">
-      <view class="menu-left">
-        <text class="menu-icon">📱</text>
-        <text class="menu-text">绑定手机</text>
-      </view>
-      <button class="btn-bind-phone" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber">
-        {{userInfo.phone ? '已绑定' : '去绑定'}}
+      <view class="menu-icon">📱</view>
+      <view class="menu-text">绑定手机</view>
+      <button class="menu-btn" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber">
+        {{userInfo && userInfo.phone ? '已绑定' : '去绑定'}}
       </button>
     </view>
 
+    <view class="gold-rule menu-rule"></view>
+
     <view class="menu-item" bindtap="goAbout">
-      <view class="menu-left">
-        <text class="menu-icon">ℹ️</text>
-        <text class="menu-text">关于我们</text>
-      </view>
-      <text class="menu-arrow">›</text>
+      <view class="menu-icon">🏮</view>
+      <view class="menu-text">关于测算</view>
+      <view class="menu-arrow">›</view>
     </view>
   </view>
 
-  <!-- 版本信息 -->
-  <view class="version-info">
-    <text>v1.0.0</text>
-  </view>
+  <view class="version">角色测算 v1.0.0</view>
+  <view class="safe-bottom"></view>
 </view>

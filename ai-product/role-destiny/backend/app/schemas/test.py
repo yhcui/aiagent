@@ -52,6 +52,7 @@ class TestListSchema(BaseModel):
     price: int = 99
     status: int = 1
     sort_order: int = 0
+    question_count: int = 0
 
     class Config:
         from_attributes = True

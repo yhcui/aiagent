@@ -31,6 +31,7 @@ class OrderCreateSchema(BaseModel):
 
 class PaymentRequestSchema(BaseModel):
     """发起支付请求模型"""
+    openid: str
     result_id: int
 
 
@@ -50,3 +51,4 @@ class PaymentResponseSchema(BaseModel):
     order_no: str
     pay_url: str  # 微信支付二维码链接
     expire_time: str
+    mock: bool = False  # DEBUG 模式模拟支付标记

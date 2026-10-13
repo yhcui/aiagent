@@ -1,52 +1,95 @@
-<!--答题页面-->
-<view class="question-page" wx:if="{{test}}">
-  <!-- 顶部进度 -->
-  <view class="progress-bar">
-    <view class="progress-info">
-      <text class="progress-text">第 {{currentIndex + 1}} / {{test.questions.length}} 题</text>
-      <text class="progress-percent">{{progressPercent}}%</text>
+<!--答题页 · 入宫答题-->
+<view class="quiz-page" wx:if="{{test}}">
+
+  <!-- 宫灯进度 -->
+  <view class="quiz-head">
+    <view class="lantern-row">
+      <view
+        class="lantern {{index < currentIndex ? 'lit' : ''}} {{index === currentIndex ? 'now' : ''}}"
+        wx:for="{{test.questions}}"
+        wx:key="id"
+      >
+        <view class="lantern-cap"></view>
+        <view class="lantern-core"></view>
+      </view>
     </view>
-    <view class="progress-track">
-      <view class="progress-fill" style="width: {{(currentIndex + 1) / test.questions.length * 100}}%"></view>
+
+    <!-- 丝绸进度 -->
+    <view class="ribbon-track">
+      <view class="ribbon-fill" style="width: {{currentIndex / test.questions.length * 100}}%;"></view>
+    </view>
+
+    <view class="head-meta">
+      <text class="hm-left song">第 {{currentIndex + 1}} 题</text>
+      <text class="hm-right">共 {{test.questions.length}} 题</text>
     </view>
   </view>
 
-  <!-- 题目内容 -->
-  <view class="question-content {{animating ? 'animating' : ''}}">
-    <view class="question-card">
-      <text class="question-text">{{test.questions[currentIndex].content}}</text>
+  <!-- 题与选项舞台 -->
+  <view class="q-stage {{animPhase === 'out' ? 'phase-out' : (animPhase === 'in' ? 'phase-in' : '')}}">
+
+    <!-- 题卡 -->
+    <view class="q-card">
+      <view class="q-card-edge"></view>
+      <view class="q-seal">问</view>
+      <view class="q-text">{{test.questions[currentIndex].content}}</view>
     </view>
 
-    <!-- 选项列表 -->
+    <!-- 选项 -->
     <view class="option-list">
       <view
-        class="option-item {{answers[currentIndex] === option.id ? 'selected' : ''}}"
+        class="option {{answers[currentIndex] === option.id ? 'selected' : ''}}"
         wx:for="{{test.questions[currentIndex].options}}"
+        wx:for-item="option"
         wx:key="id"
         bindtap="selectOption"
         data-question-index="{{currentIndex}}"
         data-option-id="{{option.id}}"
+        hover-class="option-hover"
+        hover-stay-time="80"
       >
-        <view class="option-indicator">
-          <view class="option-letter">{{['A', 'B', 'C', 'D', 'E', 'F'][index]}}</view>
-        </view>
-        <text class="option-text">{{option.content}}</text>
-        <view class="option-check">
-          <view class="check-icon" wx:if="{{answers[currentIndex] === option.id}}">✓</view>
-        </view>
+        <view class="opt-seal">{{optionLetters[index]}}</view>
+        <view class="opt-text">{{option.content}}</view>
+        <view class="opt-check" wx:if="{{answers[currentIndex] === option.id}}">✓</view>
       </view>
     </view>
   </view>
 
   <!-- 底部导航 -->
-  <view class="bottom-nav safe-area-bottom">
-    <view class="nav-btn prev" bindtap="prevQuestion" wx:if="{{currentIndex > 0}}">
-      <text class="nav-icon">‹</text>
-      <text>上一题</text>
+  <view class="nav-bar safe-bottom">
+    <view
+      class="nav-prev"
+      wx:if="{{currentIndex > 0}}"
+      bindtap="prevQuestion"
+      hover-class="btn-hover"
+      hover-stay-time="80"
+    >‹ 上一题</view>
+    <view
+      class="btn-main nav-next {{!answers[currentIndex] ? 'btn-disabled' : ''}}"
+      bindtap="nextQuestion"
+      hover-class="btn-hover"
+      hover-stay-time="80"
+    >
+      {{currentIndex === test.questions.length - 1 ? '🔮 生成命格' : '下一题 ›'}}
     </view>
-    <view class="nav-btn next {{!answers[currentIndex] ? 'disabled' : ''}}" bindtap="nextQuestion">
-      <text>{{currentIndex === test.questions.length - 1 ? '提交测试' : '下一题'}}</text>
-      <text class="nav-icon">›</text>
-    </view>
+  </view>
+</view>
+
+<!-- 加载骨架 -->
+<view class="quiz-loading" wx:if="{{!test && !loadError}}">
+  <view class="skeleton-block" style="height: 64rpx;"></view>
+  <view class="skeleton-block" style="height: 220rpx; margin-top: 40rpx;"></view>
+  <view class="skeleton-block" style="height: 96rpx; margin-top: 24rpx;"></view>
+  <view class="skeleton-block" style="height: 96rpx; margin-top: 24rpx;"></view>
+  <view class="skeleton-block" style="height: 96rpx; margin-top: 24rpx;"></view>
+</view>
+
+<!-- 加载失败 -->
+<view class="quiz-loading" wx:if="{{!test && loadError}}">
+  <view class="empty-state">
+    <view class="err-lantern">🏮</view>
+    <view class="empty-title">宫门未开</view>
+    <view class="empty-hint">{{loadError}}，请先启动后端服务再试</view>
+    <view class="btn-main retry-load" bindtap="retryLoad">重新入宫</view>
   </view>
 </view>

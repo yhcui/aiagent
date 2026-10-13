@@ -1,31 +1,30 @@
-<!--分享结果页 - 海报预览-->
-<view class="share-page">
-  <!-- 海报预览 -->
-  <view class="poster-preview" wx:if="{{!loading && posterUrl}}">
-    <image
-      class="poster-image"
-      src="{{posterUrl}}"
-      mode="aspectFit"
-      bindtap="previewPoster"
-    ></image>
+<!--分享海报页 · 命格御画-->
+<view class="share-page" style="padding-top: {{statusBarH}}px;">
+
+  <!-- 顶栏 -->
+  <view class="share-head">
+    <view class="close-btn" bindtap="close">
+      <view class="close-chev">‹</view>
+    </view>
+    <view class="share-title song">命 格 御 画</view>
+    <view class="head-holder"></view>
   </view>
 
-  <!-- 加载状态 -->
-  <view class="loading-state" wx:if="{{loading}}">
-    <view class="loading-spinner"></view>
-    <text>海报生成中...</text>
+  <!-- 海报舞台 -->
+  <view class="poster-stage" wx:if="{{posterReady}}">
+    <canvas type="2d" id="posterCanvas" class="poster-canvas"></canvas>
   </view>
 
-  <!-- 操作按钮 -->
-  <view class="action-bar safe-area-bottom" wx:if="{{!loading}}">
-    <button class="btn-save" bindtap="savePoster">
-      保存图片
-    </button>
-    <button class="btn-share" open-type="share">
-      分享给好友
-    </button>
+  <!-- 绘制中 -->
+  <view class="poster-loading" wx:if="{{!posterReady}}">
+    <view class="loading-ring"></view>
+    <view class="pl-text">{{drawError || '画师正在绘制你的命格…'}}</view>
+    <view class="btn-ghost retry-btn" wx:if="{{drawError}}" bindtap="redraw">再画一次</view>
   </view>
 
-  <!-- 关闭按钮 -->
-  <view class="close-btn" bindtap="close">×</view>
+  <!-- 操作 -->
+  <view class="share-bar safe-bottom" wx:if="{{posterReady}}">
+    <button class="btn-share-ghost" open-type="share">📤 发给好友</button>
+    <view class="btn-main btn-save" bindtap="savePoster">💾 保存到相册</view>
+  </view>
 </view>

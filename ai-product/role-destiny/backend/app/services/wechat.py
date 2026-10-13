@@ -107,22 +107,5 @@ class WechatService:
             logger.error(f"获取手机号异常: {e}")
             return None
 
-    def verify_signature(self, signature: str, timestamp: str, nonce: str, echostr: str = None) -> bool:
-        """
-        验证微信消息签名（用于回调验证）
-        """
-        import hashlib
-        import sort
-
-        # 将 token、timestamp、nonce 按字典序排序
-        temp_list = sorted([settings.WECHAT_TOKEN, timestamp, nonce])
-        temp_str = "".join(temp_list)
-
-        # 进行sha1加密
-        hash_sha1 = hashlib.sha1(temp_str.encode()).hexdigest()
-
-        return hash_sha1 == signature
-
-
-# 全局微信服务实例
+    # 全局微信服务实例
 wechat_service = WechatService()

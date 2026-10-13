@@ -10,7 +10,7 @@ from app.models.user import User
 from app.models.test import Test, Question, Option
 from app.models.role import Role
 from app.models.user_test import UserTest
-from app.schemas.user_test import UserTestResultSchema, UserTestSchema
+from app.schemas.user_test import UserTestResultSchema, UserTestSchema, SubmitRequestSchema
 from app.schemas.role import RolePreviewSchema, RoleFullSchema
 from app.services.cache import cache_service, cache_key
 from loguru import logger
@@ -81,14 +81,15 @@ def calculate_role(answers: List[int], db: Session, test_id: int) -> Dict[str, A
 
 @router.post("/submit", response_model=UserTestResultSchema)
 async def submit_test(
-    openid: str,
-    test_id: int,
-    answers: List[int],
+    data: SubmitRequestSchema,
     db: Session = Depends(get_db)
 ):
     """
     提交测试，获取结果
     """
+    openid = data.openid
+    test_id = data.test_id
+    answers = data.answers
     # 验证用户
     user = db.query(User).filter(User.openid == openid).first()
     if not user:
@@ -200,15 +201,18 @@ async def get_test_history(
         UserTest.user_id == user.id
     ).order_by(UserTest.created_at.desc()).limit(limit).offset(offset).all()
 
-    return [
-        {
+    rows = []
+    for h in history:
+        role = db.query(Role).filter(Role.id == h.result_role_id).first()
+        rows.append({
             "id": h.id,
             "test_id": h.test_id,
             "result_role_id": h.result_role_id,
+            "role_name": role.name if role else None,
+            "role_code": role.code if role else None,
             "match_score": h.match_score,
             "is_paid": bool(h.is_paid),
             "status": h.status,
             "created_at": h.created_at,
-        }
-        for h in history
-    ]
+        })
+    return rows

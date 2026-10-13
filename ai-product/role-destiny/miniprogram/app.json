@@ -10,16 +10,16 @@
     "pages/user/history"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#FF6B6B",
+    "navigationBarBackgroundColor": "#FFF8F3",
     "navigationBarTitleText": "角色测算",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#F5F5F5",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FFF8F3",
     "backgroundTextStyle": "dark",
     "enablePullDownRefresh": true
   },
   "tabBar": {
-    "color": "#999999",
-    "selectedColor": "#FF6B6B",
+    "color": "#BBAFB5",
+    "selectedColor": "#FF6B9D",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "black",
     "list": [

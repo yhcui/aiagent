@@ -9,12 +9,14 @@ Page({
   data: {
     testId: null,
     test: null,
+    loadError: '',
     currentIndex: 0,
     answers: [],
     selectedOptions: [],
-    animating: false,
+    animPhase: '',
     canSubmit: false,
-    progressPercent: 0
+    progressPercent: 0,
+    optionLetters: ['甲', '乙', '丙', '丁', '戊', '己']
   },
 
   onLoad(options) {
@@ -41,15 +43,26 @@ Page({
 
       this.setData({
         test,
+        loadError: '',
         answers: new Array(test.questions.length).fill(null),
         progressPercent
       });
     } catch (err) {
-      app.handleError(err);
-      setTimeout(() => wx.navigateBack(), 1500);
+      console.error('Load test detail failed:', err);
+      this.setData({
+        loadError: err && err.message ? err.message : '题目加载失败'
+      });
     } finally {
       app.hideLoading();
     }
+  },
+
+  /**
+   * 重新加载题目
+   */
+  retryLoad() {
+    this.setData({ loadError: '' });
+    this.loadTestDetail();
   },
 
   /**
@@ -64,15 +77,42 @@ Page({
   },
 
   /**
+   * 切换题目（两段式：滑出→换题→滑入）
+   */
+  switchQuestion(targetIndex) {
+    if (this.data.animPhase) return;
+
+    this.setData({ animPhase: 'out' });
+
+    setTimeout(() => {
+      this.setData({
+        currentIndex: targetIndex,
+        animPhase: 'in',
+      });
+      this.updateProgress();
+    }, 165);
+
+    setTimeout(() => {
+      this.setData({ animPhase: '' });
+    }, 480);
+  },
+
+  onReady() {
+    console.log('[quiz] page ready, test =', !!this.data.test);
+  },
+
+  /**
    * 选择选项
    */
   selectOption(e) {
-    if (this.data.animating) return;
+    console.log('[quiz] tap option, dataset =', e.currentTarget.dataset);
+
+    if (this.data.animPhase) return;
 
     const { questionIndex, optionId } = e.currentTarget.dataset;
 
     const answers = [...this.data.answers];
-    answers[questionIndex] = optionId;
+    answers[Number(questionIndex)] = Number(optionId);
 
     this.setData({
       answers,
@@ -84,7 +124,7 @@ Page({
    * 下一题
    */
   nextQuestion() {
-    if (this.data.animating) return;
+    if (this.data.animPhase) return;
 
     const { currentIndex, test } = this.data;
     if (currentIndex >= test.questions.length - 1) {
@@ -93,32 +133,15 @@ Page({
       return;
     }
 
-    this.setData({ animating: true });
-
-    setTimeout(() => {
-      this.setData({
-        currentIndex: currentIndex + 1,
-        animating: false
-      });
-      this.updateProgress();
-    }, 300);
+    this.switchQuestion(currentIndex + 1);
   },
 
   /**
    * 上一题
    */
   prevQuestion() {
-    if (this.data.animating || this.data.currentIndex === 0) return;
-
-    this.setData({ animating: true });
-
-    setTimeout(() => {
-      this.setData({
-        currentIndex: this.data.currentIndex - 1,
-        animating: false
-      });
-      this.updateProgress();
-    }, 300);
+    if (this.data.animPhase || this.data.currentIndex === 0) return;
+    this.switchQuestion(this.data.currentIndex - 1);
   },
 
   /**
