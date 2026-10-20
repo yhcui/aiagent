@@ -26,4 +26,4 @@ class QuizService {
   }
 }
 
-module.exports = QuizService;
+module.exports = new QuizService();

@@ -49,6 +49,6 @@ class PaymentNotifySchema(BaseModel):
 class PaymentResponseSchema(BaseModel):
     """支付响应模型"""
     order_no: str
-    pay_url: str  # 微信支付二维码链接
-    expire_time: str
-    mock: bool = False  # DEBUG 模式模拟支付标记
+    pay_params: Optional[dict] = None  # 小程序 wx.requestPayment 所需参数（真实支付 JSAPI）
+    expire_time: str = ""
+    mock: bool = False  # Mock 支付标记（已直接置为已支付）

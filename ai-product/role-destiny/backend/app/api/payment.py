@@ -1,9 +1,14 @@
 """
 支付相关API
+
+模式由 settings.PAYMENT_MODE 控制（详见 app/config.py）：
+- "mock"（默认）：不调微信，直接标记已支付，返回 mock=True
+- "real"        ：真实微信支付 JSAPI，返回 pay_params 由小程序调起 wx.requestPayment
+                  （凭证不全时自动回落 mock 并打警告）
 """
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -19,14 +24,29 @@ from loguru import logger
 router = APIRouter(prefix="/api/payment", tags=["支付"])
 
 
+def _mark_paid(db: Session, order: Order, transaction_id: str, pay_time: str):
+    """订单置为已支付（幂等：仅 pending 状态处理）"""
+    if order.status != "pending":
+        return
+    order.status = "paid"
+    order.transaction_id = transaction_id
+    order.pay_time = pay_time
+    order.updated_at = pay_time
+
+    user_test = db.query(UserTest).filter(UserTest.id == order.result_id).first()
+    if user_test and not user_test.is_paid:
+        user_test.is_paid = 1
+        user_test.paid_at = pay_time
+    db.commit()
+
+
 @router.post("/create", response_model=PaymentResponseSchema)
 async def create_payment(
     data: PaymentRequestSchema,
     db: Session = Depends(get_db)
 ):
     """
-    发起支付
-    DEBUG 模式或未配置商户号时走 Mock 支付（直接标记已支付）
+    发起支付：根据 PAYMENT_MODE 开关走 Mock 或真实微信支付
     """
     openid = data.openid
     result_id = data.result_id
@@ -41,20 +61,22 @@ async def create_payment(
         UserTest.id == result_id,
         UserTest.user_id == user.id
     ).first()
-
     if not user_test:
         raise HTTPException(status_code=404, detail="测试结果不存在")
 
-    # 检查是否已付费
     if user_test.is_paid:
         raise HTTPException(status_code=400, detail="该结果已支付")
 
-    # 获取测试价格
+    # 价格：数据库以「分」为准
     test = db.query(Test).filter(Test.id == user_test.test_id).first()
-    amount = (test.price / 100) if test else 0.99  # 默认0.99元
+    amount_fen = int(test.price) if test and test.price else 99
+    amount_yuan = round(amount_fen / 100, 2)
 
-    # ── Mock 支付（DEBUG 模式 / 未配置商户号）──
-    if settings.DEBUG or not settings.WECHAT_MCH_ID:
+    # ── Mock 支付（开关未开 / 凭证不全）──
+    if not payment_service.enabled:
+        if settings.PAYMENT_MODE == "real":
+            logger.warning("PAYMENT_MODE=real 但商户号/API密钥未配置，本次回落为 Mock 支付")
+
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         order_no = f"MOCK{int(time.time())}{uuid.uuid4().hex[:8].upper()}"
 
@@ -63,7 +85,7 @@ async def create_payment(
             user_id=user.id,
             result_id=result_id,
             test_id=user_test.test_id,
-            amount=amount,
+            amount=amount_yuan,
             status="paid",
             transaction_id=f"MOCK{int(time.time())}",
             pay_time=now,
@@ -73,88 +95,110 @@ async def create_payment(
 
         user_test.is_paid = 1
         user_test.paid_at = now
-
         db.commit()
         logger.info(f"Mock支付成功: order_no={order_no}, result_id={result_id}")
 
         return {
             "order_no": order_no,
-            "pay_url": "",
+            "pay_params": None,
             "expire_time": "",
             "mock": True,
         }
 
-    # ── 真实微信支付 ──
-    # 检查是否已有待支付订单
-    existing_order = db.query(Order).filter(
+    # ── 真实微信支付（JSAPI）──
+    order = db.query(Order).filter(
         Order.result_id == result_id,
         Order.status == "pending"
     ).first()
 
-    if existing_order:
-        # 返回现有订单
-        return {
-            "order_no": existing_order.order_no,
-            "pay_url": "",  # 需要重新生成支付链接
-            "expire_time": existing_order.expire_time or "",
-            "mock": False,
-        }
+    if not order:
+        order = Order(
+            order_no=Order.generate_order_no(),
+            user_id=user.id,
+            result_id=result_id,
+            test_id=user_test.test_id,
+            amount=amount_yuan,
+            status="pending",
+            expire_time=(datetime.now() + timedelta(minutes=15)).strftime("%Y%m%d%H%M%S"),
+        )
+        db.add(order)
+        db.commit()
+        db.refresh(order)
 
-    # 创建支付订单
-    result = await payment_service.create_order(
-        db=db,
-        user_id=user.id,
-        result_id=result_id,
-        test_id=user_test.test_id,
-        amount=amount,
-    )
-
-    if not result:
+    params = await payment_service.request_jsapi_params(order, openid, amount_fen)
+    if not params:
+        order.status = "failed"
+        db.commit()
         raise HTTPException(status_code=500, detail="创建支付订单失败")
 
-    result["mock"] = False
-    return result
+    params["mock"] = False
+    return params
+
+
+@router.post("/ad-unlock")
+async def ad_unlock(data: PaymentRequestSchema, db: Session = Depends(get_db)):
+    """
+    激励视频广告解锁（用户完整观看广告后由小程序调用）
+
+    防刷说明：微信激励视频没有服务端回调，此处信任客户端上报；
+    每个结果仅可解锁一次，刷单上限即一次广告收益，风险可控。
+    """
+    if settings.UNLOCK_MODE != "ad":
+        raise HTTPException(status_code=403, detail="未开启广告解锁模式")
+
+    user = db.query(User).filter(User.openid == data.openid).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+
+    user_test = db.query(UserTest).filter(
+        UserTest.id == data.result_id,
+        UserTest.user_id == user.id
+    ).first()
+    if not user_test:
+        raise HTTPException(status_code=404, detail="测试结果不存在")
+
+    # 幂等：已解锁直接返回成功
+    if user_test.is_paid:
+        return {"unlocked": True, "order_no": ""}
+
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    order_no = f"AD{int(time.time())}{uuid.uuid4().hex[:8].upper()}"
+
+    db.add(Order(
+        order_no=order_no,
+        user_id=user.id,
+        result_id=data.result_id,
+        test_id=user_test.test_id,
+        amount=0,  # 广告解锁无直接收入
+        status="paid",
+        transaction_id=f"AD{int(time.time())}",
+        pay_time=now,
+        expire_time="",
+    ))
+
+    user_test.is_paid = 1
+    user_test.paid_at = now
+    db.commit()
+    logger.info(f"广告解锁成功: order_no={order_no}, result_id={data.result_id}")
+
+    return {"unlocked": True, "order_no": order_no}
 
 
 @router.post("/notify")
-async def payment_notify(request: Request):
+async def payment_notify(request: Request, db: Session = Depends(get_db)):
     """
-    微信支付回调
+    微信支付异步回调
     """
     body = await request.body()
-    xml_str = body.decode("utf-8")
-
-    # 解析回调
-    params = payment_service.parse_notify(xml_str)
+    params = payment_service.parse_notify(body.decode("utf-8"))
     if not params:
         return "<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[签名验证失败]]></return_msg></xml>"
 
-    # 处理支付成功
     if params.get("return_code") == "SUCCESS" and params.get("result_code") == "SUCCESS":
-        order_no = params.get("out_trade_no")
-        transaction_id = params.get("transaction_id")
-        pay_time = params.get("time_end")
-
-        # 更新订单状态
-        db_gen = next(get_db())
-        order = db_gen.query(Order).filter(Order.order_no == order_no).first()
-
-        if order and order.status == "pending":
-            order.status = "paid"
-            order.transaction_id = transaction_id
-            order.pay_time = pay_time
-            order.updated_at = pay_time
-
-            # 更新测试结果为已付费
-            user_test = db_gen.query(UserTest).filter(UserTest.id == order.result_id).first()
-            if user_test:
-                user_test.is_paid = 1
-                user_test.paid_at = pay_time
-
-            db_gen.commit()
-            logger.info(f"支付回调处理成功: order_no={order_no}")
-
-        db_gen.close()
+        order = db.query(Order).filter(Order.order_no == params.get("out_trade_no")).first()
+        if order:
+            _mark_paid(db, order, params.get("transaction_id") or "", params.get("time_end") or "")
+            logger.info(f"支付回调处理成功: order_no={order.order_no}")
 
     return "<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>"
 
@@ -163,11 +207,23 @@ async def payment_notify(request: Request):
 async def query_order(order_no: str, db: Session = Depends(get_db)):
     """
     查询订单状态
+    本地还是 pending 且真实支付模式下，主动向微信查单兜底（回调可能延迟）
     """
     order = db.query(Order).filter(Order.order_no == order_no).first()
-
     if not order:
         raise HTTPException(status_code=404, detail="订单不存在")
+
+    if order.status == "pending" and payment_service.enabled:
+        result = await payment_service.query_wechat_order(order_no)
+        if (
+            result
+            and result.get("return_code") == "SUCCESS"
+            and result.get("result_code") == "SUCCESS"
+            and result.get("trade_state") == "SUCCESS"
+        ):
+            _mark_paid(db, order, result.get("transaction_id") or "", result.get("time_end") or "")
+            db.refresh(order)
+            logger.info(f"主动查单确认支付: order_no={order_no}")
 
     return {
         "order_no": order.order_no,

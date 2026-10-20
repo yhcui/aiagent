@@ -28,6 +28,9 @@ class UserTestResultSchema(BaseModel):
     match_score: float = Field(..., description="匹配度 0-100")
     is_paid: bool = False
     can_generate_poster: bool = True
+    unlock_mode: str = "pay"  # 解锁方式：pay=付费 | ad=激励视频广告
+    ad_unit_id: str = ""  # 广告解锁时的激励视频广告位ID
+    price_fen: int = 0  # 付费解锁价格（分）
 
     class Config:
         from_attributes = True

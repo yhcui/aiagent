@@ -18,6 +18,8 @@ Page({
     roleName: '神秘命格',
   },
 
+  posterData: null,
+
   onLoad(options) {
     const resultId = parseInt(options.resultId);
     if (!resultId) {
@@ -37,27 +39,39 @@ Page({
       const roleStyle = getRoleStyle(result.role.code);
       const nickname = (app.globalData.userInfo && app.globalData.userInfo.nickname) || '神秘小主';
 
-      this.drawPoster({
+      this.posterData = {
         roleName: result.role.name,
         emblem: roleStyle.emblem,
         hexes: roleStyle.hexes,
         desc: result.role.description || '',
         match: Math.round(result.match_score),
         nickname,
-      });
+      };
 
-      this.setData({ roleName: result.role.name });
+      this.setData({ roleName: result.role.name, drawError: '' });
+
+      // 先让画布上屏，渲染完成后再绘制
+      this.setData({ posterReady: true }, () => {
+        this.paintPoster(this.posterData);
+      });
     } catch (err) {
       console.error('Poster prepare failed:', err);
       this.setData({
-        drawError: err && err.message ? err.message : '绘制失败',
+        posterReady: false,
+        drawError: err && err.message ? err.message : '取命格数据失败',
       });
     }
   },
 
   redraw() {
     this.setData({ drawError: '' });
-    this.prepareAndDraw();
+    if (this.posterData) {
+      this.setData({ posterReady: true }, () => {
+        this.paintPoster(this.posterData);
+      });
+    } else {
+      this.prepareAndDraw();
+    }
   },
 
   /**
@@ -83,22 +97,30 @@ Page({
   },
 
   /**
-   * 绘制海报（逻辑坐标 560 × 1000）
+   * 查询画布并绘制（节点未就绪时自动重试）
    */
-  drawPoster(p) {
-    this.setData({ posterReady: false });
-
+  paintPoster(p, attempt = 0) {
     const query = wx.createSelectorQuery();
     query
       .select('#posterCanvas')
       .fields({ node: true, size: true })
       .exec((res) => {
-        try {
-          if (!res || !res[0] || !res[0].node) {
-            throw new Error('画布初始化失败');
-          }
+        const canvas = res && res[0] && res[0].node;
 
-          const canvas = res[0].node;
+        if (!canvas) {
+          // 画布节点尚未渲染完成，稍后重试
+          if (attempt < 4) {
+            setTimeout(() => this.paintPoster(p, attempt + 1), 300);
+            return;
+          }
+          this.setData({
+            posterReady: false,
+            drawError: '画布初始化失败，请再画一次',
+          });
+          return;
+        }
+
+        try {
           const ctx = canvas.getContext('2d');
           const dpr = wx.getWindowInfo().pixelRatio || 2;
 
@@ -108,11 +130,13 @@ Page({
 
           this.paint(ctx, p);
 
-          this.setData({ posterReady: true });
           this.exportPoster(canvas);
         } catch (err) {
           console.error('Draw poster failed:', err);
-          this.setData({ drawError: '绘制失败，请再画一次' });
+          this.setData({
+            posterReady: false,
+            drawError: '绘制失败，请再画一次',
+          });
         }
       });
   },

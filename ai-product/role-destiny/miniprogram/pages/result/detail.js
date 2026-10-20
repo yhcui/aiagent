@@ -20,6 +20,8 @@ Page({
     matchInt: 0,
     unlockCount: 12834,
     priceYuan: '0.99',
+    unlockMode: 'pay',
+    adUnitId: '',
   },
 
   onLoad(options) {
@@ -67,7 +69,9 @@ Page({
         roleStyle,
         raritySeal,
         matchInt: Math.round(result.match_score),
-        priceYuan: '0.99',
+        priceYuan: result.price_fen ? (result.price_fen / 100).toFixed(2) : '0.99',
+        unlockMode: result.unlock_mode || 'pay',
+        adUnitId: result.ad_unit_id || '',
       });
 
       // 更新分享信息
@@ -91,12 +95,18 @@ Page({
   },
 
   /**
-   * 解锁完整报告
+   * 解锁完整报告（付费或广告，由 unlock_mode 决定）
    */
   async unlockReport() {
     if (this.data.paymentLoading) return;
 
     this.setData({ paymentLoading: true });
+
+    // ── 广告解锁模式：拉起激励视频 ──
+    if (this.data.unlockMode === 'ad') {
+      this.showRewardedAd();
+      return;
+    }
 
     try {
       // 创建支付订单
@@ -114,17 +124,16 @@ Page({
 
       // 真实支付：调起微信支付
       if (payment && payment.pay_params) {
+        const orderNo = payment.order_no;
         wx.requestPayment({
           ...payment.pay_params,
           success: () => {
-            app.showSuccess('命格已解锁');
-            setTimeout(() => this.loadResult(), 600);
+            // 微信回调可能延迟到账，轮询订单状态直到解锁
+            this.waitForUnlock(orderNo);
           },
           fail: () => {
-            app.handleError(new Error('支付未完成'), true);
-          },
-          complete: () => {
             this.setData({ paymentLoading: false });
+            app.handleError(new Error('支付未完成'), true);
           },
         });
         return;
@@ -141,6 +150,82 @@ Page({
     } finally {
       this.setData({ paymentLoading: false });
     }
+  },
+
+  /**
+   * 激励视频广告解锁：拉起广告 → 完整观看后调后端解锁
+   */
+  showRewardedAd() {
+    const adUnitId = this.data.adUnitId;
+    if (!adUnitId) {
+      this.setData({ paymentLoading: false });
+      wx.showToast({ title: '广告位未配置', icon: 'none' });
+      return;
+    }
+
+    if (!this.rewardedAd) {
+      this.rewardedAd = wx.createRewardedVideoAd({ adUnitId });
+      this.rewardedAd.onError(() => {});
+      this.rewardedAd.onClose((res) => {
+        if (res && res.isEnded) {
+          // 完整看完 → 调后端解锁
+          this.adUnlockResult();
+        } else {
+          this.setData({ paymentLoading: false });
+          wx.showToast({ title: '需完整观看广告才能解锁', icon: 'none' });
+        }
+      });
+    }
+
+    this.rewardedAd.show().catch(() => {
+      // 首次无广告缓存 → 重新加载再展示
+      this.rewardedAd.load()
+        .then(() => this.rewardedAd.show())
+        .catch(() => {
+          this.setData({ paymentLoading: false });
+          wx.showToast({ title: '广告加载失败，请稍后再试', icon: 'none' });
+        });
+    });
+  },
+
+  /**
+   * 广告看完 → 调后端广告解锁接口
+   */
+  async adUnlockResult() {
+    try {
+      await paymentService.adUnlock(app.globalData.openid, this.data.resultId);
+      app.showSuccess('命格已解锁');
+      this.setData({ paymentLoading: false });
+      setTimeout(() => this.loadResult(), 600);
+    } catch (err) {
+      this.setData({ paymentLoading: false });
+      app.handleError(err);
+    }
+  },
+
+  /**
+   * 支付成功后轮询订单状态（回调可能延迟，最多约15秒）
+   */
+  waitForUnlock(orderNo, attempt = 0) {
+    if (attempt >= 10) {
+      this.setData({ paymentLoading: false });
+      wx.showToast({ title: '支付处理中，请稍后重新进入查看', icon: 'none' });
+      return;
+    }
+    paymentService
+      .queryOrder(orderNo)
+      .then((order) => {
+        if (order && order.is_paid) {
+          this.setData({ paymentLoading: false });
+          app.showSuccess('命格已解锁');
+          setTimeout(() => this.loadResult(), 600);
+        } else {
+          setTimeout(() => this.waitForUnlock(orderNo, attempt + 1), 1500);
+        }
+      })
+      .catch(() => {
+        setTimeout(() => this.waitForUnlock(orderNo, attempt + 1), 1500);
+      });
   },
 
   /**

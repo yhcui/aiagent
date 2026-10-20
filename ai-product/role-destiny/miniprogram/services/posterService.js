@@ -12,4 +12,4 @@ class PosterService {
   }
 }
 
-module.exports = PosterService;
+module.exports = new PosterService();

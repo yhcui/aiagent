@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>角色测算 · 后宫管理处</title>
+<style>
+  :root {
+    --rouge: #FF6B9D; --rouge-deep: #E85A8A; --gold: #C9A24B; --gold-light: #E8C878;
+    --cloud: #FFF8F3; --blush: #FFF0F3; --ink: #3B2F36; --ash: #8A7B82; --mist: #BBAFB5;
+    --line: #F0E3E8; --jade: #4CA98C; --crimson: #DD5A6E;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(180deg, #FFEFF2 0%, var(--cloud) 320px);
+    color: var(--ink); min-height: 100vh; font-size: 14px;
+  }
+  .song { font-family: "Songti SC", "STSong", "SimSun", serif; }
+
+  /* 登录 */
+  #loginView { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .login-card {
+    width: 360px; background: #fff; border-radius: 20px; padding: 44px 40px 40px;
+    box-shadow: 0 16px 48px rgba(255,107,157,.18); text-align: center;
+  }
+  .login-seal {
+    width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #F6E3B4, #D9B463 55%, #C9A24B);
+    display: flex; align-items: center; justify-content: center; font-size: 32px;
+  }
+  .login-title { font-size: 22px; font-weight: 700; letter-spacing: 6px; }
+  .login-sub { color: var(--mist); font-size: 12px; margin-top: 6px; letter-spacing: 2px; }
+  .login-card input {
+    width: 100%; height: 44px; border: 1px solid var(--line); border-radius: 10px;
+    padding: 0 14px; margin-top: 14px; font-size: 14px; outline: none;
+  }
+  .login-card input:focus { border-color: var(--rouge); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: linear-gradient(135deg, var(--rouge), #FF8E53); color: #fff; border: none;
+    height: 44px; padding: 0 26px; border-radius: 999px; font-size: 14px; font-weight: 600;
+    cursor: pointer; letter-spacing: 2px; transition: .12s;
+  }
+  .btn:hover { opacity: .92; } .btn:active { transform: scale(.97); }
+  .btn.full { width: 100%; margin-top: 20px; }
+  .btn.ghost { background: #fff; color: var(--rouge); border: 1px solid var(--rouge); }
+  .btn.gold { background: linear-gradient(135deg, #D9B463, #C9A24B); }
+  .btn.danger { background: #fff; color: var(--crimson); border: 1px solid var(--crimson); }
+  .btn.sm { height: 32px; padding: 0 16px; font-size: 12px; letter-spacing: 1px; }
+
+  /* 主布局 */
+  #mainView { display: none; max-width: 1080px; margin: 0 auto; padding: 28px 24px 60px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-seal {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #F6E3B4, #D9B463 55%, #C9A24B);
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+  }
+  .brand h1 { font-size: 20px; letter-spacing: 4px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+  .tab {
+    padding: 9px 22px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
+    color: var(--ash); cursor: pointer; font-size: 14px; letter-spacing: 2px; transition: .15s;
+  }
+  .tab.on { background: linear-gradient(135deg, var(--rouge), #FF8E53); color: #fff; border-color: transparent; font-weight: 600; }
+  .panel { display: none; } .panel.on { display: block; }
+
+  /* 卡片与表格 */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .stat-card {
+    background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 6px 20px rgba(255,107,157,.10);
+  }
+  .stat-card .num { font-size: 30px; font-weight: 700; font-family: "Songti SC", serif; }
+  .stat-card .num.gold { color: var(--gold); } .stat-card .num.pink { color: var(--rouge); } .stat-card .num.jade { color: var(--jade); }
+  .stat-card .lbl { margin-top: 4px; color: var(--mist); font-size: 12px; letter-spacing: 2px; }
+  .box { background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 6px 20px rgba(255,107,157,.10); margin-bottom: 20px; }
+  .box h3 { font-size: 15px; letter-spacing: 3px; margin-bottom: 14px; color: var(--ink); }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; color: var(--mist); font-weight: 500; font-size: 12px; letter-spacing: 1px; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 10px; border-bottom: 1px solid #F8F1F4; font-size: 13px; word-break: break-all; }
+  tr:hover td { background: #FFFAFB; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; }
+  .tag.paid { background: linear-gradient(135deg,#F2DDA6,#E8C878); color: #8A6420; }
+  .tag.free { background: #F4F1F2; color: var(--mist); }
+
+  /* 看板条形 */
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .bar-name { width: 60px; text-align: right; color: var(--ash); font-size: 13px; }
+  .bar-track { flex: 1; height: 16px; background: var(--blush); border-radius: 8px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg,#FF9DBB,#FF6B9D); }
+  .bar-num { width: 36px; font-size: 13px; color: var(--ink); font-weight: 600; }
+
+  /* 表单 */
+  .q-card { border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; background: #FFFDFA; }
+  .q-head { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .q-no { font-family: "Songti SC", serif; font-weight: 700; color: var(--rouge-deep); white-space: nowrap; }
+  .q-head input { flex: 1; }
+  .opt-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .opt-row .letter { width: 26px; height: 26px; border-radius: 50%; background: var(--blush); color: var(--rouge-deep);
+    display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  input, textarea, select {
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px;
+    font-family: inherit; outline: none; background: #fff; color: var(--ink);
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--rouge); }
+  textarea { width: 100%; resize: vertical; line-height: 1.7; }
+  .content-input { flex: 1; }
+  .score-row { flex-basis: 100%; margin: 4px 0 0 34px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .score-cell { display: inline-flex; align-items: center; gap: 5px; background: var(--blush); border: 1px solid #F3D9E0; border-radius: 999px; padding: 2px 6px 2px 10px; cursor: pointer; }
+  .score-cell b { font-size: 12px; color: var(--rouge-deep); }
+  .score-cell span { font-size: 11px; color: var(--ash); max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .score-cell input { width: 46px; padding: 3px 4px; text-align: center; font-size: 12px; border-radius: 999px; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; color: var(--mist); margin-bottom: 5px; letter-spacing: 1px; }
+  .field input, .field select { width: 100%; }
+  .field textarea { min-height: 64px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .role-item { display: flex; align-items: center; gap: 10px; padding: 12px 6px; border-bottom: 1px solid #F8F1F4; cursor: pointer; }
+  .role-item:hover { background: #FFFAFB; }
+  .role-emblem { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .muted { color: var(--mist); font-size: 12px; }
+  .actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .back-link { color: var(--rouge-deep); cursor: pointer; font-size: 13px; }
+  .ai-import { background: #FFF9F2; border: 1px dashed #E8C9A0; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; }
+  .ai-import summary { cursor: pointer; font-size: 13px; color: #8A6420; font-weight: 600; letter-spacing: 1px; }
+  .toast {
+    position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+    background: rgba(59,47,54,.92); color: #fff; padding: 10px 24px; border-radius: 999px;
+    font-size: 13px; letter-spacing: 1px; display: none; z-index: 99;
+  }
+</style>
+</head>
+<body>
+
+<!-- 登录 -->
+<div id="loginView">
+  <div class="login-card">
+    <div class="login-seal">👑</div>
+    <div class="login-title song">后宫管理处</div>
+    <div class="login-sub">角色测算 · 运营后台</div>
+    <input id="loginUser" placeholder="管理员账号" autocomplete="username">
+    <input id="loginPass" type="password" placeholder="密码" autocomplete="current-password">
+    <button class="btn full" onclick="doLogin()">登 入</button>
+  </div>
+</div>
+
+<!-- 主界面 -->
+<div id="mainView">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-seal">👑</div>
+      <h1 class="song">后宫管理处</h1>
+    </div>
+    <button class="btn ghost sm" onclick="logout()">退出</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on" data-tab="dashboard" onclick="switchTab('dashboard')">数据看板</div>
+    <div class="tab" data-tab="questions" onclick="switchTab('questions')">题目管理</div>
+    <div class="tab" data-tab="roles" onclick="switchTab('roles')">角色管理</div>
+    <div class="tab" data-tab="users" onclick="switchTab('users')">用户</div>
+    <div class="tab" data-tab="orders" onclick="switchTab('orders')">订单</div>
+  </div>
+
+  <!-- 看板 -->
+  <div class="panel on" id="panel-dashboard">
+    <div class="cards" id="statCards"></div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      <div class="box"><h3>🎭 命格分布</h3><div id="roleDist"></div></div>
+      <div class="box"><h3>📈 近 7 日答题量</h3><div id="dailyBars"></div></div>
+    </div>
+  </div>
+
+  <!-- 题目 -->
+  <div class="panel" id="panel-questions">
+    <div class="box">
+      <h3>📜 主题设置 <span class="muted">（标题 / 描述 / 价格 / 分享文案 / 上下架）</span></h3>
+      <div class="grid2">
+        <div class="field"><label>主题标题</label><input id="t-title"></div>
+        <div class="field"><label>价格（元）</label><input id="t-price" type="number" step="0.01" min="0"></div>
+      </div>
+      <div class="field"><label>主题描述</label><textarea id="t-desc" style="min-height: 52px;"></textarea></div>
+      <div class="grid2">
+        <div class="field"><label>分享标题（转发卡片）</label><input id="t-share-title"></div>
+        <div class="field"><label>分享描述</label><input id="t-share-desc"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>状态</label>
+          <select id="t-status" style="width: 100%;">
+            <option value="1">上线（小程序可见）</option>
+            <option value="0">下线（小程序隐藏）</option>
+          </select>
+        </div>
+        <div class="field"><label>排序权重（大的排前面，首页默认进第一个）</label>
+          <input id="t-sort" type="number" min="0">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="saveTestSettings()">保存主题</button>
+        <button class="btn ghost" onclick="createTest()">＋ 新增主题</button>
+        <button class="btn danger" onclick="deleteTest()">删除主题</button>
+      </div>
+    </div>
+
+    <div class="box" id="testPicker">
+      <h3>❓ 题目管理 <span class="muted">（选项计分直接给角色打分，0 分自动忽略，无需手写 JSON）</span></h3>
+      <select id="testSelect" style="min-width:280px" onchange="loadQuestions()"></select>
+      <button class="btn sm" style="margin-left:10px" onclick="addQuestion()">＋ 新增题目</button>
+    </div>
+    <div id="questionList"></div>
+  </div>
+
+  <!-- 角色 -->
+  <div class="panel" id="panel-roles">
+    <div class="box" id="roleListBox">
+      <h3>🎭 角色列表 <span class="muted">（点击编辑；角色「代号」在编辑表单里，题目计分按代号对应）</span></h3>
+      <select id="roleTestSelect" style="min-width:280px; margin-bottom:12px" onchange="loadRoles()"></select>
+      <div id="roleList"></div>
+      <div class="actions"><button class="btn sm" onclick="addRole()">＋ 新增角色</button></div>
+    </div>
+    <div class="box" id="roleEditor" style="display:none"></div>
+  </div>
+
+  <!-- 用户 -->
+  <div class="panel" id="panel-users">
+    <div class="box"><h3>👤 用户列表</h3><table><thead><tr>
+      <th>ID</th><th>昵称</th><th>openid</th><th>手机</th><th>答题数</th><th>已解锁</th><th>注册时间</th>
+    </tr></thead><tbody id="userRows"></tbody></table></div>
+  </div>
+
+  <!-- 订单 -->
+  <div class="panel" id="panel-orders">
+    <div class="box"><h3>🧾 订单列表</h3><table><thead><tr>
+      <th>订单号</th><th>用户</th><th>金额</th><th>状态</th><th>支付时间</th><th>微信单号</th>
+    </tr></thead><tbody id="orderRows"></tbody></table></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let TOKEN = localStorage.getItem('adminToken') || '';
+let currentTest = null;
+let currentRoles = [];
+
+// ── 工具 ──
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg, ms = 2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._timer); t._timer = setTimeout(() => t.style.display = 'none', ms);
+}
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN, ...(opts.headers || {}) },
+  });
+  if (res.status === 401) { showLogin(); throw new Error('登录已过期'); }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || '请求失败');
+  return data;
+}
+
+// ── 登录 ──
+function showLogin() {
+  document.getElementById('loginView').style.display = 'flex';
+  document.getElementById('mainView').style.display = 'none';
+}
+function showMain() {
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('mainView').style.display = 'block';
+}
+async function doLogin() {
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  try {
+    const r = await fetch(API + '/api/admin/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || '登录失败');
+    TOKEN = data.token;
+    localStorage.setItem('adminToken', TOKEN);
+    showMain(); init();
+  } catch (e) { toast(e.message); }
+}
+function logout() { TOKEN = ''; localStorage.removeItem('adminToken'); showLogin(); }
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ── Tab ──
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'panel-' + name));
+  if (name === 'dashboard') loadStats();
+  if (name === 'questions') loadTests();
+  if (name === 'roles') loadRoles();
+  if (name === 'users') loadUsers();
+  if (name === 'orders') loadOrders();
+}
+
+// ── 看板 ──
+async function loadStats() {
+  const s = await api('/api/admin/stats');
+  document.getElementById('statCards').innerHTML = `
+    <div class="stat-card"><div class="num">${s.total_users}</div><div class="lbl">入宫用户</div></div>
+    <div class="stat-card"><div class="num pink">${s.total_taken}</div><div class="lbl">答题次数</div></div>
+    <div class="stat-card"><div class="num gold">${s.paid_count}</div><div class="lbl">解锁命格</div></div>
+    <div class="stat-card"><div class="num jade">${s.conversion}%</div><div class="lbl">付费转化率</div></div>
+    <div class="stat-card"><div class="num gold">¥${s.revenue}</div><div class="lbl">累计收入</div></div>`;
+  const maxRole = Math.max(1, ...s.role_dist.map(r => r.count));
+  document.getElementById('roleDist').innerHTML = s.role_dist.length
+    ? s.role_dist.map(r => `
+      <div class="bar-row">
+        <div class="bar-name">${esc(r.name)}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${r.count / maxRole * 100}%"></div></div>
+        <div class="bar-num">${r.count}</div>
+      </div>`).join('')
+    : '<div class="muted">暂无数据</div>';
+  const maxDay = Math.max(1, ...s.daily.map(d => d.count));
+  document.getElementById('dailyBars').innerHTML = s.daily.map(d => `
+    <div class="bar-row">
+      <div class="bar-name">${d.day.slice(5)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${d.count / maxDay * 100}%"></div></div>
+      <div class="bar-num">${d.count}</div>
+    </div>`).join('');
+}
+
+// ── 题目 ──
+async function loadTests() {
+  const tests = await api('/api/admin/tests');
+  document.getElementById('testSelect').innerHTML = tests.map(t =>
+    `<option value="${t.id}">${esc(t.title)}（${t.question_count} 题）</option>`).join('');
+  if (tests.length) {
+    const known = tests.some(t => String(t.id) === String(currentTest));
+    document.getElementById('testSelect').value = String(known && currentTest ? currentTest : tests[0].id);
+    loadQuestions();
+  }
+}
+function letters(i) { return '甲乙丙丁戊己庚辛'[i] || (i + 1); }
+
+async function loadQuestions() {
+  currentTest = document.getElementById('testSelect').value;
+  const t = await api('/api/admin/tests/' + currentTest);
+  currentRoles = await api('/api/admin/roles?test_id=' + currentTest);
+
+  // 填充主题设置
+  document.getElementById('t-title').value = t.title || '';
+  document.getElementById('t-desc').value = t.description || '';
+  document.getElementById('t-share-title').value = t.share_title || '';
+  document.getElementById('t-share-desc').value = t.share_desc || '';
+  document.getElementById('t-price').value = ((t.price || 0) / 100).toFixed(2);
+  document.getElementById('t-status').value = String(t.status == null ? 1 : t.status);
+  document.getElementById('t-sort').value = t.sort_order == null ? 100 : t.sort_order;
+
+  document.getElementById('questionList').innerHTML = t.questions.map((q, qi) => `
+    <div class="box q-card" id="q-${q.id}">
+      <div class="q-head">
+        <span class="q-no">第 ${qi + 1} 题</span>
+        <input class="content-input" id="q-content-${q.id}" value="${esc(q.content)}">
+        <button class="btn sm" onclick="saveQuestion(${q.id})">保存</button>
+        <button class="btn danger sm" onclick="delQuestion(${q.id})">删除</button>
+      </div>
+      ${q.options.map((o, oi) => `
+        <div class="opt-row">
+          <div class="letter">${letters(oi)}</div>
+          <input class="content-input" id="o-content-${q.id}-${oi}" value="${esc(o.content)}" placeholder="选项内容">
+          <div class="score-row">
+            ${currentRoles.length ? currentRoles.map(r => `
+              <label class="score-cell" title="选此选项给「${esc(r.name)}」加几分（2=主角色，1=沾边，0=不计分）">
+                <b>${esc(r.code)}</b><span>${esc(r.name)}</span>
+                <input type="number" min="0" max="9" step="1" class="score-num" data-oi="${oi}" data-code="${esc(r.code)}" value="${(o.score_map || {})[r.code] || 0}">
+              </label>`).join('') : '<span class="muted">⚠ 本主题还没有角色——请先到「角色管理」建角色并设代号，回来即可点选计分</span>'}
+          </div>
+        </div>`).join('')}
+    </div>`).join('') || '<div class="box muted">暂无题目，点击「新增题目」开始</div>';
+}
+
+function collectQuestion(qid, optCount) {
+  const card = document.getElementById('q-' + qid);
+  return {
+    content: document.getElementById('q-content-' + qid).value.trim(),
+    sort_order: qid,
+    options: Array.from({ length: optCount }, (_, oi) => {
+      const score = {};
+      card.querySelectorAll('.score-num[data-oi="' + oi + '"]').forEach(inp => {
+        const v = parseFloat(inp.value) || 0;
+        if (v > 0) score[inp.dataset.code] = v;
+      });
+      return { content: document.getElementById('o-content-' + qid + '-' + oi).value.trim(), score_map: score };
+    }),
+  };
+}
+
+async function saveQuestion(qid) {
+  try {
+    const card = document.getElementById('q-' + qid);
+    const optRows = card.querySelectorAll('.opt-row').length;
+    const body = collectQuestion(qid, optRows);
+    // 带上选项 id（保留原有选项）
+    const t = await api('/api/admin/tests/' + currentTest);
+    const old = t.questions.find(x => x.id === qid);
+    if (old && old.options.length === body.options.length) {
+      body.options = body.options.map((o, i) => ({ ...o, id: old.options[i].id }));
+    }
+    await api('/api/admin/questions/' + qid, { method: 'PUT', body: JSON.stringify(body) });
+    toast('已保存'); loadQuestions();
+  } catch (e) { toast(e.message, 3000); }
+}
+
+async function delQuestion(qid) {
+  if (!confirm('确定删除该题及其选项？已产生的答题记录不受影响')) return;
+  await api('/api/admin/questions/' + qid, { method: 'DELETE' });
+  toast('已删除'); loadQuestions();
+}
+
+async function addQuestion() {
+  const content = prompt('请输入题目内容：');
+  if (!content) return;
+  const options = ['A', 'B', 'C', 'D'].map(() => ({ content: '新选项（请编辑）', score_map: {} }));
+  const r = await api('/api/admin/tests/' + currentTest + '/questions', {
+    method: 'POST', body: JSON.stringify({ content, options }),
+  });
+  toast('已添加，请编辑选项内容与计分');
+  await loadQuestions();
+  // 聚焦到新题
+  const el = document.getElementById('q-content-' + r.id);
+  if (el) el.focus();
+}
+
+// ── 主题 ──
+async function saveTestSettings() {
+  try {
+    const title = document.getElementById('t-title').value.trim();
+    if (!title) { toast('主题标题不能为空'); return; }
+    const yuan = parseFloat(document.getElementById('t-price').value) || 0;
+    const body = {
+      title,
+      description: document.getElementById('t-desc').value.trim(),
+      share_title: document.getElementById('t-share-title').value.trim(),
+      share_desc: document.getElementById('t-share-desc').value.trim(),
+      price: Math.round(yuan * 100),
+      status: parseInt(document.getElementById('t-status').value, 10),
+      sort_order: parseInt(document.getElementById('t-sort').value, 10) || 100,
+    };
+    await api('/api/admin/tests/' + currentTest, { method: 'PUT', body: JSON.stringify(body) });
+    toast('主题已保存，小程序端即时生效');
+    loadTests();
+  } catch (e) { toast(e.message, 3000); }
+}
+
+async function createTest() {
+  const title = prompt('新主题标题（如：测测你是甄嬛传里的谁）：');
+  if (!title) return;
+  try {
+    const r = await api('/api/admin/tests', {
+      method: 'POST',
+      body: JSON.stringify({ title, description: '', price: 99, status: 1, sort_order: 100 }),
+    });
+    toast('主题已创建，请补充题目与角色');
+    currentTest = r.id;
+    await loadTests();
+    document.getElementById('testSelect').value = r.id;
+    loadQuestions();
+  } catch (e) { toast(e.message, 3000); }
+}
+
+async function deleteTest() {
+  if (!confirm('确定删除该主题及其全部题目与角色？此操作不可恢复')) return;
+  try {
+    await api('/api/admin/tests/' + currentTest, { method: 'DELETE' });
+    toast('主题已删除');
+    currentTest = null;
+    loadTests();
+  } catch (e) { toast(e.message, 3500); }
+}
+
+// ── 角色 ──
+async function loadRoles() {
+  const tests = await api('/api/admin/tests');
+  if (!tests.length) { document.getElementById('roleList').innerHTML = '<div class="muted">暂无测试主题</div>'; return; }
+  const sel = document.getElementById('roleTestSelect');
+  // onchange 触发时 sel.value 就是用户刚选的新值；首次进入为空则跟随全局主题
+  const picked = sel.value;
+  sel.innerHTML = tests.map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('');
+  const ids = tests.map(t => String(t.id));
+  const target = (picked && ids.includes(String(picked))) ? picked
+    : ((currentTest && ids.includes(String(currentTest))) ? currentTest : tests[0].id);
+  sel.value = String(target);
+  currentTest = String(target);
+  currentRoles = await api('/api/admin/roles?test_id=' + currentTest);
+  document.getElementById('roleList').innerHTML = currentRoles.map(r => `
+    <div class="role-item" onclick="editRole(${r.id})">
+      <div class="role-emblem" style="background:${esc(r.tint || '#FFF0F3')}">${esc(r.emblem || '✨')}</div>
+      <div style="flex:1">
+        <b class="song">${esc(r.name)}</b> <span class="muted">${esc(r.code)} · 稀有度 ${(r.rarity * 100).toFixed(0)}% · 被测出 ${r.used_count} 次</span>
+      </div>
+      <span class="muted">${esc(r.description || '')}</span>
+    </div>`).join('') || '<div class="muted">本主题还没有角色</div>';
+}
+
+// ── AI 文案导入 ──
+function aiPromptFor(name) {
+  return [
+    '你是宫廷命格测算的文案师，请为角色「' + name + '」撰写付费解锁报告的内容。',
+    '',
+    '文风要求：古风宫廷、典雅含蓄、第二人称「你」，判词要有钦天监批命的仪式感；严禁现代网络用语与 emoji。',
+    '',
+    '输出严格 JSON（不要 markdown 代码块、不要任何多余文字），字段如下：',
+    '{',
+    '  "description": "一句话描述，30字内（免费预览用）",',
+    '  "detail_text": "命格判词，120~200字",',
+    '  "personality": "性格画像，100~160字",',
+    '  "destiny": "命运走向，100~160字",',
+    '  "advantages": ["天赋加身，每条一句话，共4条"],',
+    '  "weaknesses": ["暗影须知，每条一句话，共3条"],',
+    '  "suggestion": "命格箴言（给用户的中肯建议），80~120字",',
+    '  "lucky_number": "幸运数字",',
+    '  "lucky_color": "幸运颜色（古风色名，如月白、黛青、绯红）",',
+    '  "motto": "座右铭，古风一句"',
+    '}',
+    '',
+    '如需一次生成多个角色，可输出 JSON 数组：[{"name":"角色名", ...上述字段...}, ...]，每个角色按同样风格写。',
+  ].join('\n');
+}
+function copyAIPrompt() {
+  const ta = document.getElementById('ai-prompt');
+  ta.focus(); ta.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+  toast(ok ? '咒语已复制——去问豆包 / Kimi / 元宝 / ChatGPT 均可' : '自动复制失败，请在文本框里 Ctrl+A 全选手动复制');
+}
+function importAIContent() {
+  let text = (document.getElementById('ai-json').value || '').trim();
+  if (!text) { toast('请先粘贴大模型输出的 JSON'); return; }
+  text = text.replace(/^```[a-zA-Z]*\s*/i, '').replace(/```\s*$/i, '').trim();
+  let data;
+  try { data = JSON.parse(text); }
+  catch (e) { toast('JSON 解析失败：' + e.message + '——需要完整 JSON，别混入说明文字', 3800); return; }
+  if (Array.isArray(data)) {
+    if (!data.length) { toast('数组是空的'); return; }
+    if (data.length === 1) data = data[0];
+    else {
+      const list = data.map((d, i) => (i + 1) + '. ' + ((d && d.name) || '未命名')).join('\n');
+      const n = parseInt(prompt('检测到 ' + data.length + ' 个角色，本次载入哪个？（载入保存后，再粘贴一次选下一个）\n' + list + '\n请输入序号：', '1'), 10);
+      if (!(n >= 1 && n <= data.length)) { toast('已取消导入'); return; }
+      data = data[n - 1];
+    }
+  }
+  if (!data || typeof data !== 'object') { toast('格式不对：需要 JSON 对象或数组'); return; }
+  const set = (id, v) => {
+    const el = document.getElementById(id); if (!el) return;
+    el.value = Array.isArray(v) ? v.filter(Boolean).join('\n') : (v == null ? '' : String(v));
+  };
+  set('r-desc', data.description);
+  set('r-detail', data.detail_text);
+  set('r-personality', data.personality);
+  set('r-destiny', data.destiny);
+  set('r-adv', data.advantages);
+  set('r-weak', data.weaknesses);
+  set('r-suggestion', data.suggestion);
+  set('r-lnum', data.lucky_number);
+  set('r-lcolor', data.lucky_color);
+  set('r-motto', data.motto);
+  toast('已填充表单——请人工过目，再点「保存修改」');
+  document.getElementById('r-detail').scrollIntoView({ behavior: 'smooth' });
+}
+
+function editRole(rid) {
+  const r = currentRoles.find(x => x.id === rid);
+  if (!r) return;
+  const box = document.getElementById('roleEditor');
+  box.style.display = 'block';
+  box.innerHTML = `
+    <h3>✏️ 编辑角色 · ${esc(r.name)} <span class="back-link" onclick="document.getElementById('roleEditor').style.display='none'">收起</span></h3>
+    <details class="ai-import">
+      <summary>🤖 AI 文案导入（嫌手填麻烦？复制咒语让大模型写，贴回来一键填充）</summary>
+      <div class="field" style="margin-top:12px;">
+        <label>① 复制咒语（已带入本角色名）→ 去问豆包 / Kimi / 元宝 / ChatGPT 等任意大模型</label>
+        <textarea id="ai-prompt" rows="9" readonly>${esc(aiPromptFor(r.name))}</textarea>
+        <button class="btn sm ghost" style="margin-top:6px;" onclick="copyAIPrompt()">复制咒语</button>
+      </div>
+      <div class="field">
+        <label>② 贴回大模型输出的 JSON（多个角色的数组也行），点导入填充表单</label>
+        <textarea id="ai-json" rows="7" placeholder='把大模型输出的 JSON 粘贴到这里…'></textarea>
+        <button class="btn sm" style="margin-top:6px;" onclick="importAIContent()">导入并填充表单（不自动保存，过目后点下方「保存修改」）</button>
+      </div>
+    </details>
+    <div class="grid3">
+      <div class="field"><label>名称</label><input id="r-name" value="${esc(r.name)}"></div>
+      <div class="field"><label>代号（前端视觉档案以此匹配，慎改）</label><input id="r-code" value="${esc(r.code)}"></div>
+      <div class="field"><label>稀有度 0~1</label><input id="r-rarity" type="number" step="0.01" min="0" max="1" value="${r.rarity}"></div>
+    </div>
+    <div class="field"><label>一句话描述（免费可见）</label><textarea id="r-desc">${esc(r.description)}</textarea></div>
+    <div class="field"><label>命格判词</label><textarea id="r-detail">${esc(r.detail_text)}</textarea></div>
+    <div class="field"><label>性格画像</label><textarea id="r-personality">${esc(r.personality)}</textarea></div>
+    <div class="field"><label>命运走向</label><textarea id="r-destiny">${esc(r.destiny)}</textarea></div>
+    <div class="grid2">
+      <div class="field"><label>天赋加身（每行一条）</label><textarea id="r-adv">${esc((r.advantages || []).join('\n'))}</textarea></div>
+      <div class="field"><label>暗影须知（每行一条）</label><textarea id="r-weak">${esc((r.weaknesses || []).join('\n'))}</textarea></div>
+    </div>
+    <div class="field"><label>命格箴言（建议）</label><textarea id="r-suggestion">${esc(r.suggestion)}</textarea></div>
+    <div class="grid3">
+      <div class="field"><label>幸运数字</label><input id="r-lnum" value="${esc(r.lucky_number)}"></div>
+      <div class="field"><label>幸运颜色</label><input id="r-lcolor" value="${esc(r.lucky_color)}"></div>
+      <div class="field"><label>座右铭</label><input id="r-motto" value="${esc(r.motto)}"></div>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="saveRole(${r.id})">保存修改</button>
+      <button class="btn danger" onclick="delRole(${r.id})">删除角色</button>
+    </div>`;
+  box.scrollIntoView({ behavior: 'smooth' });
+}
+
+async function saveRole(rid) {
+  try {
+    const lines = id => document.getElementById(id).value.split('\n').map(s => s.trim()).filter(Boolean);
+    const body = {
+      name: document.getElementById('r-name').value.trim(),
+      code: document.getElementById('r-code').value.trim(),
+      rarity: parseFloat(document.getElementById('r-rarity').value) || 0.15,
+      description: document.getElementById('r-desc').value.trim(),
+      detail_text: document.getElementById('r-detail').value.trim(),
+      personality: document.getElementById('r-personality').value.trim(),
+      destiny: document.getElementById('r-destiny').value.trim(),
+      advantages: lines('r-adv'),
+      weaknesses: lines('r-weak'),
+      suggestion: document.getElementById('r-suggestion').value.trim(),
+      lucky_number: document.getElementById('r-lnum').value.trim(),
+      lucky_color: document.getElementById('r-lcolor').value.trim(),
+      motto: document.getElementById('r-motto').value.trim(),
+    };
+    await api('/api/admin/roles/' + rid, { method: 'PUT', body: JSON.stringify(body) });
+    toast('角色已更新'); loadRoles();
+  } catch (e) { toast(e.message, 3000); }
+}
+
+async function delRole(rid) {
+  if (!confirm('确定删除该角色？')) return;
+  try {
+    await api('/api/admin/roles/' + rid, { method: 'DELETE' });
+    toast('已删除');
+    document.getElementById('roleEditor').style.display = 'none';
+    loadRoles();
+  } catch (e) { toast(e.message, 3200); }
+}
+
+async function addRole() {
+  const name = prompt('新角色名称（如：钦天监）：');
+  if (!name) return;
+  const tests = await api('/api/admin/tests');
+  if (!tests.length) { toast('请先创建测试主题'); return; }
+  const sel = document.getElementById('roleTestSelect');
+  const testId = (sel && sel.value) || currentTest || tests[0].id;
+  currentRoles = await api('/api/admin/roles?test_id=' + testId);
+  const used = currentRoles.map(r => String(r.code || '').toUpperCase());
+  let suggestion = null;
+  for (const c of ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']) { if (!used.includes(c)) { suggestion = c; break; } }
+  if (!suggestion) suggestion = 'R' + (currentRoles.length + 1);
+  const code = (prompt('角色代号（建议用 A-H：小程序的徽记/袍色配色按代号自动匹配，每期主题的代号独立互不影响。直接回车采用 ' + suggestion + '）：', suggestion) || suggestion).trim().toUpperCase();
+  if (!code) { toast('代号不能为空'); return; }
+  if (used.includes(code) && !confirm('代号 ' + code + ' 已被本主题另一个角色使用，计分会混在一起，确定继续？')) return;
+  await api('/api/admin/roles', {
+    method: 'POST',
+    body: JSON.stringify({ test_id: testId, name, code, description: '暂无描述', rarity: 0.15 }),
+  });
+  toast('已添加，请在列表中点击它完善内容'); loadRoles();
+}
+
+// ── 用户 / 订单 ──
+async function loadUsers() {
+  const users = await api('/api/admin/users');
+  document.getElementById('userRows').innerHTML = users.map(u => `
+    <tr>
+      <td>${u.id}</td><td>${esc(u.nickname || '未赐名')}</td>
+      <td class="muted">${esc(u.openid.slice(0, 12))}…</td>
+      <td>${esc(u.phone || '-')}</td><td>${u.test_count}</td>
+      <td>${u.paid_count ? '<span class="tag paid">' + u.paid_count + '</span>' : '<span class="tag free">0</span>'}</td>
+      <td class="muted">${esc(u.created_at)}</td>
+    </tr>`).join('') || '<tr><td colspan="7" class="muted">暂无用户</td></tr>';
+}
+
+async function loadOrders() {
+  const orders = await api('/api/admin/orders');
+  document.getElementById('orderRows').innerHTML = orders.map(o => `
+    <tr>
+      <td class="muted">${esc(o.order_no)}</td><td>${esc(o.user)}</td>
+      <td>¥${o.amount}</td>
+      <td>${o.status === 'paid' ? '<span class="tag paid">已支付</span>' : '<span class="tag free">' + esc(o.status) + '</span>'}</td>
+      <td class="muted">${esc(o.pay_time || '-')}</td>
+      <td class="muted">${esc(o.transaction_id || '-')}</td>
+    </tr>`).join('') || '<tr><td colspan="6" class="muted">暂无订单</td></tr>';
+}
+
+// ── 初始化 ──
+async function init() {
+  try { await loadStats(); } catch (e) { toast(e.message); }
+}
+if (TOKEN) {
+  // 有缓存 token，尝试直接进入
+  fetch(API + '/api/admin/stats', { headers: { Authorization: 'Bearer ' + TOKEN } })
+    .then(r => { if (r.ok) { showMain(); init(); } else { showLogin(); } })
+    .catch(() => showLogin());
+} else {
+  showLogin();
+}
+</script>
+</body>
+</html>

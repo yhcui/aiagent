@@ -6,6 +6,7 @@ from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.config import settings
 from app.models.user import User
 from app.models.test import Test, Question, Option
 from app.models.role import Role
@@ -172,6 +173,11 @@ async def get_test_result(
     if user_test.is_paid:
         full_role = role.to_full_dict()
 
+    # 解锁方式与价格（未付费时前端据此渲染解锁按钮）
+    test = db.query(Test).filter(Test.id == user_test.test_id).first()
+    ad_ready = settings.UNLOCK_MODE == "ad" and bool(settings.REWARDED_AD_UNIT_ID)
+    unlock_mode = "ad" if (ad_ready and not user_test.is_paid) else "pay"
+
     return {
         "id": user_test.id,
         "test_id": user_test.test_id,
@@ -180,6 +186,9 @@ async def get_test_result(
         "match_score": user_test.match_score,
         "is_paid": bool(user_test.is_paid),
         "can_generate_poster": True,
+        "unlock_mode": unlock_mode,
+        "ad_unit_id": settings.REWARDED_AD_UNIT_ID if unlock_mode == "ad" else "",
+        "price_fen": int(test.price) if test and test.price else 99,
     }
 
 

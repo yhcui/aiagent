@@ -62,14 +62,8 @@
     <!-- 骨架 -->
     <view class="feature-card skeleton-block" wx:if="{{loading}}" style="height: 420rpx;"></view>
 
-    <!-- 限定卡 -->
-    <view
-      class="feature-card a-rise"
-      wx:for="{{testList}}"
-      wx:key="id"
-      bindtap="goTest"
-      data-id="{{item.id}}"
-    >
+    <!-- 限定卡（只展示排序第一的主打主题） -->
+    <view class="feature-card a-rise" wx:if="{{firstTest}}" bindtap="goTest" data-id="{{firstTest.id}}">
       <view class="fc-cover">
         <view class="fc-glow glow-a"></view>
         <view class="fc-glow glow-b"></view>
@@ -78,11 +72,11 @@
         <view class="fc-lantern">✦</view>
       </view>
       <view class="fc-body">
-        <view class="fc-title song">{{item.title}}</view>
-        <view class="fc-desc">{{item.description}}</view>
+        <view class="fc-title song">{{firstTest.title}}</view>
+        <view class="fc-desc">{{firstTest.description}}</view>
         <view class="fc-meta">
-          <view class="jade-tag">{{item.question_count || 8}} 题 · 约 4 分钟</view>
-          <view class="fc-price">¥{{item.priceYuan}}</view>
+          <view class="jade-tag">{{firstTest.question_count || 8}} 题 · 约 4 分钟</view>
+          <view class="fc-price">¥{{firstTest.priceYuan}}</view>
         </view>
       </view>
     </view>

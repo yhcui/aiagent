@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.database import engine, Base
-from app.api import auth, test, quiz, payment, poster
+from app.api import auth, test, quiz, payment, poster, admin
 from loguru import logger
 import os
 
@@ -60,6 +60,17 @@ app.include_router(test.router)
 app.include_router(quiz.router)
 app.include_router(payment.router)
 app.include_router(poster.router)
+app.include_router(admin.router)
+
+
+@app.get("/admin", include_in_schema=False)
+async def admin_page():
+    """后台管理页"""
+    from fastapi.responses import FileResponse
+    return FileResponse(
+        os.path.join(settings.STATIC_DIR, "admin.html"),
+        media_type="text/html",
+    )
 
 
 @app.get("/")

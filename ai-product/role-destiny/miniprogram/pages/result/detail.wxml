@@ -61,7 +61,8 @@
         <view class="lock-title song">命格详解已封存</view>
         <view class="lock-desc">解锁后查看：性格画像 · 命运走向 · 天赋与暗影 · 命格箴言</view>
         <view class="btn-gold lock-btn" bindtap="unlockReport">
-          🔓 解锁完整命格 · ¥{{priceYuan}}
+          <block wx:if="{{unlockMode === 'ad'}}">📺 观看视频广告 · 免费解锁完整命格</block>
+          <block wx:else>🔓 解锁完整命格 · ¥{{priceYuan}}</block>
         </view>
         <view class="lock-proof">已有 {{unlockCount}} 位小主解锁了自己的命格</view>
       </view>

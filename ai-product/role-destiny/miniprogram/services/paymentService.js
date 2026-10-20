@@ -17,6 +17,13 @@ class PaymentService {
   async queryOrder(orderNo) {
     return apiService.get('/api/payment/query/' + orderNo);
   }
+
+  /**
+   * 激励视频广告解锁（看完广告后调用）
+   */
+  async adUnlock(openid, resultId) {
+    return apiService.post('/api/payment/ad-unlock', { openid, result_id: resultId });
+  }
 }
 
 module.exports = new PaymentService();
